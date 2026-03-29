@@ -48,7 +48,6 @@ export function AuthProvider({ children }) {
         const res = await api.post("/api/v1/auth/token", formData, {
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
-        console.log(res.data)
 
         localStorage.setItem("access_token", res.data.access_token);
         if (res.data.refresh_token) {
