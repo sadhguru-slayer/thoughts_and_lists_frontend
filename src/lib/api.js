@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000',
-});
+const baseURL =
+    process.env.NODE_ENV === 'production'
+        ? process.env.NEXT_PUBLIC_BACKEND_URL
+        : 'http://127.0.0.1:8000';
+
+const api = axios.create({ baseURL });
 
 // Add a request interceptor
 api.interceptors.request.use(

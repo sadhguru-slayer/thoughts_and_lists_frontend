@@ -10,6 +10,7 @@ export function JournalProvider({ children }) {
     const [journals, setJournals] = useState([]);
     const [templates, setTemplates] = useState([]);
     const [detailById, setDetailById] = useState({});
+    const [analytics, setAnalytics] = useState(null);
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
 
@@ -17,10 +18,12 @@ export function JournalProvider({ children }) {
         if (user) {
             fetchJournals();
             fetchTemplates();
+            fetchAnalytics();
         } else {
             setJournals([]);
             setTemplates([]);
             setDetailById({});
+            setAnalytics(null);
         }
     }, [user]);
 
@@ -33,6 +36,15 @@ export function JournalProvider({ children }) {
             console.error("Failed to fetch journals:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchAnalytics = async () => {
+        try {
+            const res = await api.get("/api/v1/journal/analytics");
+            setAnalytics(res.data);
+        } catch (err) {
+            console.error("Failed to fetch analytics:", err);
         }
     };
 
@@ -101,6 +113,7 @@ export function JournalProvider({ children }) {
             setJournals((prev) => [newJournal, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)));
             // Also fetch templates again in case they saved a reusable section
             fetchTemplates();
+            fetchAnalytics();
             return newJournal;
         } catch (err) {
             console.error("Failed to create journal:", err);
@@ -117,6 +130,7 @@ export function JournalProvider({ children }) {
                 delete next[id];
                 return next;
             });
+            fetchAnalytics();
         } catch (err) {
             console.error("Failed to delete journal:", err);
         }
@@ -137,18 +151,21 @@ export function JournalProvider({ children }) {
             journals,
             detailById,
             templates,
+            analytics,
             latestJournalStructure,
             loading,
             loadJournalDetail,
             handleCreateSubmit,
             handleDelete,
             handleDeleteTemplate,
-            refreshJournals: fetchJournals
+            refreshJournals: fetchJournals,
+            fetchAnalytics
         }),
         [
             journals,
             detailById,
             templates,
+            analytics,
             latestJournalStructure,
             loading,
             loadJournalDetail,

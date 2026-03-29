@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Moon, Sun, Plus } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -33,8 +34,25 @@ export default function Header() {
                         href="/"
                         className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 hover:opacity-80 transition-opacity flex items-center gap-2"
                     >
-                        <div className="h-7 w-7 rounded-xl bg-gradient-to-tr from-zinc-900 to-zinc-700 dark:from-zinc-100 dark:to-zinc-300 flex items-center justify-center shadow-sm">
-                            <span className="text-white dark:text-zinc-900 text-sm font-black">T</span>
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[0.65rem] dark:hidden">
+                            <Image
+                                src="/light_theme_logo.jpeg"
+                                alt="Logo Light"
+                                fill
+                                sizes="40px"
+                                className="object-cover scale-[1.3]"
+                                priority
+                            />
+                        </div>
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[0.65rem] hidden dark:block">
+                            <Image
+                                src="/dark_theme_logo.jpeg"
+                                alt="Logo Dark"
+                                fill
+                                sizes="40px"
+                                className="object-cover scale-[1.3]"
+                                priority
+                            />
                         </div>
                         <span>Thoughts</span>
                     </Link>

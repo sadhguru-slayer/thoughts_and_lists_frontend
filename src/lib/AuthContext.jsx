@@ -57,6 +57,20 @@ export function AuthProvider({ children }) {
         router.push("/");
     };
 
+    const requestOtp = async (email) => {
+        await api.post("/api/v1/auth/request-otp", { email });
+    };
+
+    const verifyOtp = async (email, otp) => {
+        const res = await api.post("/api/v1/auth/verify-otp", { email, otp });
+        localStorage.setItem("access_token", res.data.access_token);
+        if (res.data.refresh_token) {
+            localStorage.setItem("refresh_token", res.data.refresh_token);
+        }
+        setUser({ token: res.data.access_token });
+        router.push("/");
+    };
+
     const register = async (email, password) => {
         // Backend register endpoint requires: email, password, role 'user'
         await api.post("/api/v1/auth/register", { email, password, role: "user" });
@@ -72,7 +86,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, requestOtp, verifyOtp }}>
             {!loading && children}
         </AuthContext.Provider>
     );

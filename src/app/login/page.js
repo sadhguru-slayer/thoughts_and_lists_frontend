@@ -7,20 +7,35 @@ import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-    const { login } = useAuth();
+    const { login, requestOtp, verifyOtp } = useAuth();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // OTP states
+    const [isOtpMode, setIsOtpMode] = useState(false);
+    const [otpSent, setOtpSent] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
         setLoading(true);
         try {
-            await login(username, password);
+            if (isOtpMode) {
+                if (!otpSent) {
+                    await requestOtp(username);
+                    setOtpSent(true);
+                } else {
+                    await verifyOtp(username, otp);
+                }
+            } else {
+                await login(username, password);
+            }
         } catch (err) {
             setError(err.response?.data?.detail || "Failed to log in.");
+        } finally {
             setLoading(false);
         }
     };
@@ -48,6 +63,12 @@ export default function LoginPage() {
                         </div>
                     )}
 
+                    {otpSent && isOtpMode && (
+                        <div className="rounded-xl bg-green-50 p-3 text-sm font-medium text-green-600 dark:bg-green-950/50 dark:text-green-400">
+                            OTP sent successfully. Please check your email.
+                        </div>
+                    )}
+
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                             Email
@@ -56,32 +77,68 @@ export default function LoginPage() {
                             type="email"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
+                            disabled={otpSent && isOtpMode}
+                            className={`w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:focus:border-zinc-100 ${otpSent && isOtpMode ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-300 dark:hover:border-zinc-700'}`}
                             placeholder="you@example.com"
                             required
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
-                            placeholder="••••••••"
-                            required
-                        />
-                    </div>
+                    {!isOtpMode && (
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
+                                placeholder="••••••••"
+                                required
+                            />
+                        </div>
+                    )}
+
+                    {isOtpMode && otpSent && (
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                OTP Code
+                            </label>
+                            <input
+                                type="text"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium tracking-widest outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
+                                placeholder="123456"
+                                maxLength={6}
+                                required
+                            />
+                        </div>
+                    )}
 
                     <button
                         type="submit"
                         disabled={loading}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white shadow-md transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 active:scale-[0.98] disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                            !isOtpMode ? "Sign In" : (!otpSent ? "Send OTP" : "Verify & Sign In")
+                        )}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsOtpMode(!isOtpMode);
+                            setOtpSent(false);
+                            setError("");
+                            setOtp("");
+                        }}
+                        disabled={loading}
+                        className="w-full text-center text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition"
+                    >
+                        {isOtpMode ? "Use password instead" : "Login with OTP instead"}
                     </button>
                 </form>
 
