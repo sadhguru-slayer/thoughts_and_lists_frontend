@@ -4,6 +4,7 @@ import { JournalProvider } from "@/lib/JournalContext";
 import { ThoughtsProvider } from "@/lib/ThoughtsContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/journal/Header";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
     >
       <body className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Toaster richColors position="top-center" />
           <AuthProvider>
             <ThoughtsProvider>
               <JournalProvider>

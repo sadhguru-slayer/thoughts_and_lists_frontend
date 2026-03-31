@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         if (!loading) {
-            const publicRoutes = ["/login", "/register"];
+            const publicRoutes = ["/login", "/register", "/forgot-password"];
             // Redirect unauthenticated users
             if (!user && !publicRoutes.includes(pathname)) {
                 router.push("/login");
@@ -71,6 +71,23 @@ export function AuthProvider({ children }) {
         router.push("/");
     };
 
+    const requestPasswordReset = async (email) => {
+        await api.post("/api/v1/auth/request-password-reset", { email });
+    };
+
+    const verifyResetOtp = async (email, otp) => {
+        const res = await api.post("/api/v1/auth/verify-reset-otp", { email, otp });
+        return res.data.reset_token;
+    };
+
+    const resetPassword = async (resetToken, newPassword) => {
+        await api.post(
+            "/api/v1/auth/reset-password",
+            { new_password: newPassword }, // body
+            { headers: { Authorization: `Bearer ${resetToken}` } }
+        );
+    };
+
     const register = async (email, password) => {
         // Backend register endpoint requires: email, password, role 'user'
         await api.post("/api/v1/auth/register", { email, password, role: "user" });
@@ -86,7 +103,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, requestOtp, verifyOtp }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, requestOtp, verifyOtp, requestPasswordReset, verifyResetOtp, resetPassword }}>
             {!loading && children}
         </AuthContext.Provider>
     );

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
     const { login, requestOtp, verifyOtp } = useAuth();
@@ -12,21 +12,26 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
+    const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
+    
+    const [showPassword, setShowPassword] = useState(false);
 
-    // OTP states
+    // Modes: 'login', 'otp'
     const [isOtpMode, setIsOtpMode] = useState(false);
     const [otpSent, setOtpSent] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setMessage("");
         setLoading(true);
         try {
             if (isOtpMode) {
                 if (!otpSent) {
                     await requestOtp(username);
                     setOtpSent(true);
+                    setMessage("OTP sent successfully. Please check your email.");
                 } else {
                     await verifyOtp(username, otp);
                 }
@@ -34,10 +39,19 @@ export default function LoginPage() {
                 await login(username, password);
             }
         } catch (err) {
-            setError(err.response?.data?.detail || "Failed to log in.");
+            setError(err.response?.data?.detail || "An error occurred.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const toggleMode = () => {
+        setIsOtpMode(!isOtpMode);
+        setOtpSent(false);
+        setError("");
+        setMessage("");
+        setOtp("");
+        setPassword("");
     };
 
     return (
@@ -63,9 +77,9 @@ export default function LoginPage() {
                         </div>
                     )}
 
-                    {otpSent && isOtpMode && (
+                    {message && (
                         <div className="rounded-xl bg-green-50 p-3 text-sm font-medium text-green-600 dark:bg-green-950/50 dark:text-green-400">
-                            OTP sent successfully. Please check your email.
+                            {message}
                         </div>
                     )}
 
@@ -89,14 +103,28 @@ export default function LoginPage() {
                             <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                                 Password
                             </label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
-                                placeholder="••••••••"
-                                required
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 pr-10 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                                >
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                            </div>
+                            <div className="text-right mt-1">
+                                <Link href="/forgot-password" className="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition">
+                                    Forgot password?
+                                </Link>
+                            </div>
                         </div>
                     )}
 
@@ -127,19 +155,16 @@ export default function LoginPage() {
                         )}
                     </button>
 
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setIsOtpMode(!isOtpMode);
-                            setOtpSent(false);
-                            setError("");
-                            setOtp("");
-                        }}
-                        disabled={loading}
-                        className="w-full text-center text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition"
-                    >
-                        {isOtpMode ? "Use password instead" : "Login with OTP instead"}
-                    </button>
+                    <div className="flex flex-col gap-2 pt-2">
+                        <button
+                            type="button"
+                            onClick={toggleMode}
+                            disabled={loading}
+                            className="w-full text-center text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition"
+                        >
+                            {isOtpMode ? "Use password instead" : "Login with OTP instead"}
+                        </button>
+                    </div>
                 </form>
 
                 <p className="mt-6 text-center text-sm font-medium text-zinc-600 dark:text-zinc-400">
