@@ -72,6 +72,16 @@ export function ThoughtsProvider({ children }) {
         }
     }, []);
 
+    const deleteThoughts = useCallback(async (ids) => {
+        try {
+            await api.post("/api/v1/thoughts/bulk-delete", { ids });
+            setThoughts((prev) => prev.filter((t) => !ids.includes(t.id)));
+        } catch (err) {
+            console.error("Failed to bulk delete thoughts:", err);
+            throw err;
+        }
+    }, []);
+
     const value = useMemo(
         () => ({
             thoughts,
@@ -79,9 +89,10 @@ export function ThoughtsProvider({ children }) {
             addThought,
             editThought,
             deleteThought,
+            deleteThoughts,
             refreshThoughts: fetchThoughts
         }),
-        [thoughts, loading, addThought, editThought, deleteThought]
+        [thoughts, loading, addThought, editThought, deleteThought, deleteThoughts]
     );
 
     return (
