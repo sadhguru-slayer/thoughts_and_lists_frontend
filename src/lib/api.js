@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 const baseURL =
     process.env.NODE_ENV === 'production'
@@ -10,7 +11,7 @@ const api = axios.create({ baseURL });
 // Add a request interceptor
 api.interceptors.request.use(
     (config) => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        const token = typeof window !== 'undefined' ? Cookies.get('access_token') : null;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

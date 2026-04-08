@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import api from "./api";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -13,7 +14,7 @@ export function AuthProvider({ children }) {
     const pathname = usePathname();
 
     useEffect(() => {
-        const token = localStorage.getItem("access_token");
+        const token = Cookies.get("access_token");
         if (token) {
             setUser({ token });
         }
@@ -49,9 +50,9 @@ export function AuthProvider({ children }) {
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
 
-        localStorage.setItem("access_token", res.data.access_token);
+        Cookies.set("access_token", res.data.access_token, { path: "/", sameSite: "Lax" });
         if (res.data.refresh_token) {
-            localStorage.setItem("refresh_token", res.data.refresh_token);
+            Cookies.set("refresh_token", res.data.refresh_token, { path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
         router.push("/");
@@ -63,9 +64,9 @@ export function AuthProvider({ children }) {
 
     const verifyOtp = async (email, otp) => {
         const res = await api.post("/api/v1/auth/verify-otp", { email, otp });
-        localStorage.setItem("access_token", res.data.access_token);
+        Cookies.set("access_token", res.data.access_token, { path: "/", sameSite: "Lax" });
         if (res.data.refresh_token) {
-            localStorage.setItem("refresh_token", res.data.refresh_token);
+            Cookies.set("refresh_token", res.data.refresh_token, { path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
         router.push("/");
@@ -96,8 +97,8 @@ export function AuthProvider({ children }) {
     };
 
     const logout = () => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
+        Cookies.remove("access_token", { path: "/" });
+        Cookies.remove("refresh_token", { path: "/" });
         setUser(null);
         router.push("/login");
     };
