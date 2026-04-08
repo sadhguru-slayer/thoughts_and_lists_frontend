@@ -50,9 +50,9 @@ export function AuthProvider({ children }) {
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
 
-        Cookies.set("access_token", res.data.access_token, { path: "/", sameSite: "Lax" });
+        Cookies.set("access_token", res.data.access_token, { expires: 7, path: "/", sameSite: "Lax" });
         if (res.data.refresh_token) {
-            Cookies.set("refresh_token", res.data.refresh_token, { path: "/", sameSite: "Lax" });
+            Cookies.set("refresh_token", res.data.refresh_token, { expires: 7, path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
         router.push("/");
@@ -64,9 +64,9 @@ export function AuthProvider({ children }) {
 
     const verifyOtp = async (email, otp) => {
         const res = await api.post("/api/v1/auth/verify-otp", { email, otp });
-        Cookies.set("access_token", res.data.access_token, { path: "/", sameSite: "Lax" });
+        Cookies.set("access_token", res.data.access_token, { expires: 7, path: "/", sameSite: "Lax" });
         if (res.data.refresh_token) {
-            Cookies.set("refresh_token", res.data.refresh_token, { path: "/", sameSite: "Lax" });
+            Cookies.set("refresh_token", res.data.refresh_token, { expires: 7, path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
         router.push("/");
