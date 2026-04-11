@@ -6,22 +6,53 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
+const passwordRules = [
+    {
+        label: "At least 8 characters",
+        test: (value) => value.length >= 8,
+    },
+    {
+        label: "At least one number",
+        test: (value) => /\d/.test(value),
+    },
+    {
+        label: "At least one special character",
+        test: (value) => /[!@#$%^&*(),.?":{}|<>]/.test(value),
+    },
+];
+
 export default function RegisterPage() {
     const { register } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const passwordValid = passwordRules.every((rule) => rule.test(password));
+    const passwordsMatch = password.length > 0 && password === confirmPassword;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
+        if (!passwordValid) {
+            setError("Password must be at least 8 characters and include a number and special character.");
+            return;
+        }
+
+        if (!passwordsMatch) {
+            setError("Passwords do not match.");
+            return;
+        }
+
         setLoading(true);
         try {
             await register(email, password);
         } catch (err) {
             setError(err.response?.data?.detail || "Failed to create account.");
+        } finally {
             setLoading(false);
         }
     };
@@ -57,7 +88,7 @@ export default function RegisterPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
+                            className="w-full rounded-xl border border-zinc-200 dark:text-white bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
                             placeholder="you@example.com"
                             required
                         />
@@ -72,10 +103,10 @@ export default function RegisterPage() {
                                 type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 pr-10 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
+                                className="w-full rounded-xl border dark:text-white border-zinc-200 bg-white px-4 py-3 pr-10 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
                                 placeholder="••••••••"
                                 required
-                                minLength={6}
+                                minLength={8}
                             />
                             <button
                                 type="button"
@@ -86,6 +117,56 @@ export default function RegisterPage() {
                             </button>
                         </div>
                     </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                            Confirm password
+                        </label>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full rounded-xl border dark:text-white border-zinc-200 bg-white px-4 py-3 pr-10 text-sm font-medium outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
+                                placeholder="••••••••"
+                                required
+                                minLength={8}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {(password.length > 0 || confirmPassword.length > 0) && (
+                        <div className="rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-300">
+                            <p className="mb-2 font-semibold text-zinc-900 dark:text-zinc-100">Password requirements</p>
+                            <ul className="space-y-1">
+                                {passwordRules.map((rule) => {
+                                    const valid = rule.test(password);
+                                    return (
+                                        <li
+                                            key={rule.label}
+                                            className={valid ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-500 dark:text-zinc-400"}
+                                        >
+                                            <span className="inline-block h-4 w-4 mr-2">{valid ? "✓" : "•"}</span>
+                                            {rule.label}
+                                        </li>
+                                    );
+                                })}
+                                <li
+                                    className={passwordsMatch ? "text-emerald-600 dark:text-emerald-400" : confirmPassword.length === 0 ? "text-zinc-500 dark:text-zinc-400" : "text-red-600 dark:text-red-400"}
+                                >
+                                    <span className="inline-block h-4 w-4 mr-2">{passwordsMatch ? "✓" : "•"}</span>
+                                    Passwords match
+                                </li>
+                            </ul>
+                        </div>
+                    )}
 
                     <button
                         type="submit"
