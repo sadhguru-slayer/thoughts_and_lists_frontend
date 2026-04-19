@@ -58,26 +58,28 @@ export default function Header() {
                     </Link>
 
                     {/* Desktop Navigation Links */}
-                    <nav className="hidden sm:flex items-center gap-4 text-sm font-medium">
-                        <Link
-                            href="/"
-                            className={cn(
-                                "transition-colors hover:text-zinc-900 dark:hover:text-zinc-50",
-                                !isThoughts ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-500 dark:text-zinc-400"
-                            )}
-                        >
-                            Journal
-                        </Link>
-                        <Link
-                            href="/thoughts"
-                            className={cn(
-                                "transition-colors hover:text-zinc-900 dark:hover:text-zinc-50",
-                                isThoughts ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-500 dark:text-zinc-400"
-                            )}
-                        >
-                            Notes
-                        </Link>
-                    </nav>
+                    {user && (
+                        <nav className="hidden sm:flex items-center gap-4 text-sm font-medium">
+                            <Link
+                                href="/"
+                                className={cn(
+                                    "transition-colors hover:text-zinc-900 dark:hover:text-zinc-50",
+                                    !isThoughts ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-500 dark:text-zinc-400"
+                                )}
+                            >
+                                Journal
+                            </Link>
+                            <Link
+                                href="/thoughts"
+                                className={cn(
+                                    "transition-colors hover:text-zinc-900 dark:hover:text-zinc-50",
+                                    isThoughts ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-500 dark:text-zinc-400"
+                                )}
+                            >
+                                Notes
+                            </Link>
+                        </nav>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">
@@ -115,26 +117,28 @@ export default function Header() {
             </div>
 
             {/* Mobile nav bottom bar */}
-            <nav className="flex sm:hidden items-center gap-6 px-4 pb-2 text-sm font-medium overflow-x-auto">
-                <Link
-                    href="/"
-                    className={cn(
-                        "pb-2 border-b-2 transition-colors",
-                        !isThoughts ? "border-zinc-900 text-zinc-900 dark:border-white dark:text-zinc-50" : "border-transparent text-zinc-500 dark:text-zinc-400"
-                    )}
-                >
-                    Journal
-                </Link>
-                <Link
-                    href="/thoughts"
-                    className={cn(
-                        "pb-2 border-b-2 transition-colors",
-                        isThoughts ? "border-zinc-900 text-zinc-900 dark:border-white dark:text-zinc-50" : "border-transparent text-zinc-500 dark:text-zinc-400"
-                    )}
-                >
-                    Notes
-                </Link>
-            </nav>
+            {user && (
+                <nav className="flex sm:hidden items-center gap-6 px-4 pb-2 text-sm font-medium overflow-x-auto">
+                    <Link
+                        href="/"
+                        className={cn(
+                            "pb-2 border-b-2 transition-colors",
+                            !isThoughts ? "border-zinc-900 text-zinc-900 dark:border-white dark:text-zinc-50" : "border-transparent text-zinc-500 dark:text-zinc-400"
+                        )}
+                    >
+                        Journal
+                    </Link>
+                    <Link
+                        href="/thoughts"
+                        className={cn(
+                            "pb-2 border-b-2 transition-colors",
+                            isThoughts ? "border-zinc-900 text-zinc-900 dark:border-white dark:text-zinc-50" : "border-transparent text-zinc-500 dark:text-zinc-400"
+                        )}
+                    >
+                        Notes
+                    </Link>
+                </nav>
+            )}
         </header>
     );
 }

@@ -13,18 +13,32 @@ export function JournalProvider({ children }) {
     const [analytics, setAnalytics] = useState(null);
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [latestStructure, setLatestStructure] = useState({ sections: [] });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const fetchLatestStructure = async () => {
+        try {
+            const res = await api.get("/api/v1/journal/structure/latest");
+            if (res.data) setLatestStructure(res.data);
+        } catch (err) {
+            console.error("Failed to fetch latest structure:", err);
+        }
+    };
 
     useEffect(() => {
         if (user) {
             fetchJournals();
             fetchTemplates();
             fetchAnalytics();
+            fetchLatestStructure();
         } else {
             setJournals([]);
             setTemplates([]);
             setDetailById({});
             setAnalytics(null);
+            setLatestStructure({ sections: [] });
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const fetchJournals = async () => {
@@ -71,26 +85,6 @@ export function JournalProvider({ children }) {
         }
     }, [detailById]);
 
-    // Builds the starting array for frontend template sections when creating
-    const latestJournalStructure = useMemo(
-        () => {
-            return {
-                sections: templates.map((t) => ({
-                    name: t.name,
-                    template_id: t.id,
-                    fields: [...(t.fields || [])]
-                        .sort((a, b) => a.order - b.order)
-                        .map((f) => ({
-                            label: f.label,
-                            field_type: f.field_type,
-                            value: f.field_type === "checkbox" ? "false" : "",
-                        })),
-                })),
-            };
-        },
-        [templates]
-    );
-
     const handleCreateSubmit = useCallback(async ({ date, content, sections }) => {
         try {
             const payload = {
@@ -103,7 +97,8 @@ export function JournalProvider({ children }) {
                     field_values: s.fieldValues.map(fv => ({
                         label: fv.label,
                         field_type: fv.field_type,
-                        value: fv.value
+                        value: fv.value,
+                        field_id: fv.field_id
                     }))
                 }))
             };
@@ -114,6 +109,7 @@ export function JournalProvider({ children }) {
             // Also fetch templates again in case they saved a reusable section
             fetchTemplates();
             fetchAnalytics();
+            fetchLatestStructure();
             return newJournal;
         } catch (err) {
             console.error("Failed to create journal:", err);
@@ -152,7 +148,7 @@ export function JournalProvider({ children }) {
             detailById,
             templates,
             analytics,
-            latestJournalStructure,
+            latestJournalStructure: latestStructure,
             loading,
             loadJournalDetail,
             handleCreateSubmit,
@@ -166,7 +162,7 @@ export function JournalProvider({ children }) {
             detailById,
             templates,
             analytics,
-            latestJournalStructure,
+            latestStructure,
             loading,
             loadJournalDetail,
             handleCreateSubmit,

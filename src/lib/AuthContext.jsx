@@ -29,10 +29,10 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         if (!loading) {
-            const publicRoutes = ["/login", "/register", "/forgot-password"];
+            const publicRoutes = ["/welcome", "/login", "/register", "/forgot-password"];
             // Redirect unauthenticated users
             if (!user && !publicRoutes.includes(pathname)) {
-                router.push("/login");
+                router.push("/welcome");
             }
             // Redirect authenticated users away from public routes
             else if (user && publicRoutes.includes(pathname)) {

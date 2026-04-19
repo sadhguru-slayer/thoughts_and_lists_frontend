@@ -155,51 +155,7 @@ function CustomFieldRow({ fieldIndex, fv, onChange, onRemove, disabled }) {
   );
 }
 
-function TemplateFieldRow({ fv, fieldIndex, onChange, disabled }) {
-  if (fv.field_type === "checkbox") {
-    return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-white/40 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-          {fv.label}
-        </span>
-        <label className="flex items-center cursor-pointer gap-2 scale-110 opacity-90 transition-opacity hover:opacity-100">
-          <input
-            type="checkbox"
-            disabled={disabled}
-            checked={fv.value === "true" || fv.value === true}
-            onChange={(e) =>
-              onChange(fieldIndex, e.target.checked ? "true" : "false")
-            }
-            className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-600 disabled:opacity-50"
-          />
-        </label>
-      </div>
-    );
-  }
 
-  return (
-    <div className="space-y-1">
-      <label className={`${labelClass} px-1 mb-1 normal-case tracking-normal`}>{fv.label}</label>
-      {fv.field_type === "textarea" ? (
-        <textarea
-          rows={3}
-          disabled={disabled}
-          value={fv.value ?? ""}
-          onChange={(e) => onChange(fieldIndex, e.target.value)}
-          className={inputClass}
-        />
-      ) : (
-        <input
-          type="text"
-          disabled={disabled}
-          value={fv.value ?? ""}
-          onChange={(e) => onChange(fieldIndex, e.target.value)}
-          className={inputClass}
-        />
-      )}
-    </div>
-  );
-}
 
 function AddCustomFields({ sectionKey, onAddField, disabled }) {
   const [newLabel, setNewLabel] = useState("");
@@ -608,37 +564,25 @@ export default function JournalCreateForm({
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    {sec.fieldValues.map((fv, idx) =>
-                      sec.templateId != null ? (
-                        <TemplateFieldRow
-                          key={`${sec.clientKey}-f-${idx}`}
-                          fv={fv}
-                          fieldIndex={idx}
-                          disabled={isSubmitting}
-                          onChange={(i, v) => setFieldValue(sec.clientKey, i, v)}
-                        />
-                      ) : (
-                        <CustomFieldRow
-                          key={`${sec.clientKey}-custom-${idx}`}
-                          fv={fv}
-                          fieldIndex={idx}
-                          disabled={isSubmitting}
-                          onChange={(i, v) => setFieldValue(sec.clientKey, i, v)}
-                          onRemove={(i) => removeCustomField(sec.clientKey, i)}
-                        />
-                      )
-                    )}
+                    {sec.fieldValues.map((fv, idx) => (
+                      <CustomFieldRow
+                        key={`${sec.clientKey}-f-${idx}`}
+                        fv={fv}
+                        fieldIndex={idx}
+                        disabled={isSubmitting}
+                        onChange={(i, v) => setFieldValue(sec.clientKey, i, v)}
+                        onRemove={(i) => removeCustomField(sec.clientKey, i)}
+                      />
+                    ))}
                   </div>
 
-                  {sec.templateId == null && (
-                    <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                      <AddCustomFields
-                        sectionKey={sec.clientKey}
-                        onAddField={addCustomField}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                  )}
+                  <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <AddCustomFields
+                      sectionKey={sec.clientKey}
+                      onAddField={addCustomField}
+                      disabled={isSubmitting}
+                    />
+                  </div>
                 </motion.article>
               ))}
             </AnimatePresence>
