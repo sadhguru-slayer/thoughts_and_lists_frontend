@@ -15,7 +15,6 @@ export function JournalProvider({ children }) {
     const [loading, setLoading] = useState(false);
     const [latestStructure, setLatestStructure] = useState({ sections: [] });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const fetchLatestStructure = async () => {
         try {
             const res = await api.get("/api/v1/journal/structure/latest");
@@ -38,7 +37,6 @@ export function JournalProvider({ children }) {
             setAnalytics(null);
             setLatestStructure({ sections: [] });
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const fetchJournals = async () => {
@@ -71,9 +69,9 @@ export function JournalProvider({ children }) {
         }
     };
 
-    const loadJournalDetail = useCallback(async (id) => {
+    const loadJournalDetail = useCallback(async (id, forceRefresh = false) => {
         try {
-            if (detailById[id]) return detailById[id];
+            if (!forceRefresh && detailById[id]) return detailById[id];
             const res = await api.get(`/api/v1/journal/${id}`);
             const detail = res.data;
             console.log(detail)
@@ -142,6 +140,20 @@ export function JournalProvider({ children }) {
         }
     }, []);
 
+    const handleUpdateJournal = useCallback(async (id, payload) => {
+        try {
+            await api.patch(`/api/v1/journal/${id}`, payload);
+            await Promise.all([
+                fetchJournals(),
+                fetchAnalytics(),
+                loadJournalDetail(id, true),
+            ]);
+        } catch (err) {
+            console.error("Failed to update journal:", err);
+            throw err;
+        }
+    }, [loadJournalDetail]);
+
     const value = useMemo(
         () => ({
             journals,
@@ -154,6 +166,7 @@ export function JournalProvider({ children }) {
             handleCreateSubmit,
             handleDelete,
             handleDeleteTemplate,
+            handleUpdateJournal,
             refreshJournals: fetchJournals,
             fetchAnalytics
         }),
@@ -168,6 +181,7 @@ export function JournalProvider({ children }) {
             handleCreateSubmit,
             handleDelete,
             handleDeleteTemplate,
+            handleUpdateJournal,
         ]
     );
 

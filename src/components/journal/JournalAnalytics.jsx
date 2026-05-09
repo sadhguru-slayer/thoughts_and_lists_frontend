@@ -97,6 +97,10 @@ export default function JournalAnalytics() {
             <motion.div variants={itemVariants} className="p-6 rounded-3xl bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm flex flex-col gap-4 overflow-hidden">
                 <div className="flex items-center justify-between">
                     <p className="text-[11px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">Contribution Map</p>
+                    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                        <span>Journals: {analytics.total_journals ?? 0}</span>
+                        <span>Notes: {analytics.total_thoughts ?? 0}</span>
+                    </div>
                 </div>
 
                 <div className="w-full overflow-x-auto pb-2 scrollbar-none">
@@ -109,7 +113,7 @@ export default function JournalAnalytics() {
                                 <div key={i} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[3px] transition-colors relative group ${getColorClass(day.count)}`}>
                                     <div className="absolute opacity-0 group-hover:opacity-100 bottom-full mb-2 bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white text-xs py-1.5 px-3 rounded-lg -translate-x-1/2 left-1/2 whitespace-nowrap pointer-events-none z-20 transition-all font-medium drop-shadow-md">
                                         <span className="opacity-70 mr-1">{day.date}:</span>
-                                        {day.count} {day.count === 1 ? 'entry' : 'entries'}
+                                        {day.count} {day.count === 1 ? 'action' : 'actions'}
                                     </div>
                                 </div>
                             );

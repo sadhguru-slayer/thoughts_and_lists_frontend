@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 export default function JournalDetailPage() {
     const router = useRouter();
     const { id } = useParams();
-    const { detailById, loadJournalDetail, handleDelete } = useJournal();
+    const { detailById, loadJournalDetail, handleDelete, handleUpdateJournal } = useJournal();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -60,6 +60,7 @@ export default function JournalDetailPage() {
             detail={detail}
             onBack={handleBack}
             onDelete={onDelete}
+            onSave={handleUpdateJournal}
         />
     );
 }
