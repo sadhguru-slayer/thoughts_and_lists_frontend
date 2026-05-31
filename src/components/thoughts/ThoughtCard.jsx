@@ -96,9 +96,9 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
                         {truncate(thought.title, TITLE_MAX)}
                     </h3>
                 )}
-                {thought.content && (
+                {(thought.content_preview || thought.content) && (
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                        {truncate(thought.content, CONTENT_MAX)}
+                        {thought.content_preview || truncate(thought.content, CONTENT_MAX)}
                     </p>
                 )}
             </div>

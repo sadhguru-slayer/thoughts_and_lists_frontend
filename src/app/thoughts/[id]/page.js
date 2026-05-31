@@ -9,21 +9,33 @@ import { motion } from "framer-motion";
 export default function ThoughtEditPage() {
     const { id } = useParams();
     const router = useRouter();
-    const { thoughts, editThought } = useThoughts();
-
-    const thought = thoughts.find((t) => String(t.id) === String(id));
+    const { editThought, fetchThoughtById } = useThoughts();
 
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [notFound, setNotFound] = useState(false);
 
     useEffect(() => {
-        if (thought) {
-            setTitle(thought.title || "");
-            setContent(thought.content || "");
-        }
-    }, [thought]);
+        let cancelled = false;
+
+        fetchThoughtById(id)
+            .then((thought) => {
+                if (cancelled) return;
+                setTitle(thought.title || "");
+                setContent(thought.content || "");
+            })
+            .catch(() => {
+                if (!cancelled) setNotFound(true);
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+
+        return () => { cancelled = true; };
+    }, [id, fetchThoughtById]);
 
     const handleSave = async () => {
         setSaving(true);
@@ -36,7 +48,15 @@ export default function ThoughtEditPage() {
         }
     };
 
-    if (!thought) {
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-full py-24">
+                <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+            </div>
+        );
+    }
+
+    if (notFound) {
         return (
             <div className="flex flex-col items-center justify-center h-full py-24 gap-4">
                 <p className="text-zinc-500 dark:text-zinc-400">Thought not found.</p>
@@ -56,7 +76,6 @@ export default function ThoughtEditPage() {
             animate={{ opacity: 1, y: 0 }}
             className="w-full flex-1 pt-6 pb-10 flex flex-col gap-6"
         >
-            {/* Header */}
             <div className="flex items-center gap-3">
                 <button
                     onClick={() => router.push("/thoughts")}
@@ -87,7 +106,6 @@ export default function ThoughtEditPage() {
                 </div>
             </div>
 
-            {/* Title */}
             <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm px-4 py-3">
                 <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1 block">
                     Title
@@ -101,7 +119,6 @@ export default function ThoughtEditPage() {
                 />
             </div>
 
-            {/* Content */}
             <div className="flex-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm px-4 py-3 flex flex-col">
                 <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1 block">
                     Content

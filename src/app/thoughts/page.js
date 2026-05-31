@@ -6,10 +6,10 @@ import ThoughtCard from "@/components/thoughts/ThoughtCard";
 import ThoughtPreview from "@/components/thoughts/ThoughtPreview";
 import { useThoughts } from "@/lib/ThoughtsContext";
 import { AnimatePresence, motion } from "framer-motion";
-import { Trash2, CheckSquare, X } from "lucide-react";
+import { Trash2, CheckSquare, X, Loader2 } from "lucide-react";
 
 export default function ThoughtsPage() {
-    const { thoughts, deleteThoughts } = useThoughts();
+    const { thoughts, loading, deleteThoughts } = useThoughts();
     const [selectedIds, setSelectedIds] = useState([]);
     const [previewThought, setPreviewThought] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -102,24 +102,33 @@ export default function ThoughtsPage() {
                 </AnimatePresence>
 
                 {/* Notes grid */}
-                <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-                    <AnimatePresence>
-                        {thoughts.map((thought) => (
-                            <div key={thought.id} className="break-inside-avoid">
-                                <ThoughtCard
-                                    thought={thought}
-                                    isSelected={selectedIds.includes(thought.id)}
-                                    onSelect={handleSelect}
-                                    onOpen={handleOpen}
-                                    isSelectMode={isSelectMode}
-                                    onEnterSelectMode={handleEnterSelectMode}
-                                />
-                            </div>
-                        ))}
-                    </AnimatePresence>
-                </div>
+                {!loading && (
+                    <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+                        <AnimatePresence>
+                            {thoughts.map((thought) => (
+                                <div key={thought.id} className="break-inside-avoid">
+                                    <ThoughtCard
+                                        thought={thought}
+                                        isSelected={selectedIds.includes(thought.id)}
+                                        onSelect={handleSelect}
+                                        onOpen={handleOpen}
+                                        isSelectMode={isSelectMode}
+                                        onEnterSelectMode={handleEnterSelectMode}
+                                    />
+                                </div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                )}
 
-                {thoughts.length === 0 && (
+                {loading && (
+                    <div className="flex flex-col items-center justify-center gap-3 mt-20 text-zinc-500 dark:text-zinc-400 font-medium">
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <p>Loading thoughts…</p>
+                    </div>
+                )}
+
+                {!loading && thoughts.length === 0 && (
                     <div className="text-center mt-20 text-zinc-500 dark:text-zinc-400 font-medium">
                         Take a moment to jot down a thought.
                     </div>

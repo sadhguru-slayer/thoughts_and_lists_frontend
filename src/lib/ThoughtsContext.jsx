@@ -6,17 +6,37 @@ import { useAuth } from "./AuthContext";
 
 const ThoughtsContext = createContext(null);
 
+const CONTENT_PREVIEW_MAX = 120;
+const TITLE_PREVIEW_MAX = 60;
+
+function truncate(str, max) {
+    if (!str) return "";
+    return str.length > max ? str.slice(0, max).trimEnd() + "…" : str;
+}
+
+function toThoughtSummary(thought) {
+    return {
+        id: thought.id,
+        title: truncate(thought.title, TITLE_PREVIEW_MAX),
+        content_preview: truncate(thought.content, CONTENT_PREVIEW_MAX),
+        user_id: thought.user_id,
+        created_at: thought.created_at,
+        updated_at: thought.updated_at,
+    };
+}
+
 export function ThoughtsProvider({ children }) {
     const [thoughts, setThoughts] = useState([]);
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
 
-    // Fetch thoughts on mount if authenticated
     useEffect(() => {
         if (user) {
+            setLoading(true);
             fetchThoughts();
         } else {
             setThoughts([]);
+            setLoading(false);
         }
     }, [user]);
 
@@ -24,7 +44,6 @@ export function ThoughtsProvider({ children }) {
         try {
             setLoading(true);
             const res = await api.get("/api/v1/thoughts");
-            // ensure descending order
             const sorted = res.data.sort((a, b) => b.id - a.id);
             setThoughts(sorted);
         } catch (err) {
@@ -34,14 +53,19 @@ export function ThoughtsProvider({ children }) {
         }
     };
 
+    const fetchThoughtById = useCallback(async (id) => {
+        const res = await api.get(`/api/v1/thoughts/${id}`);
+        return res.data;
+    }, []);
+
     const addThought = useCallback(async ({ title, content }) => {
         try {
             const res = await api.post("/api/v1/thoughts", {
                 title: (title || "").trim(),
                 content: (content || "").trim()
             });
-            // Pushing to top locally for snappy UI
-            setThoughts((prev) => [res.data, ...prev]);
+            setThoughts((prev) => [toThoughtSummary(res.data), ...prev]);
+            return res.data;
         } catch (err) {
             console.error("Failed to add thought:", err);
             throw err;
@@ -55,11 +79,14 @@ export function ThoughtsProvider({ children }) {
                 title: (title || "").trim(),
                 content: (content || "").trim()
             });
+            const updated = res.data.thought || res.data;
             setThoughts((prev) =>
-                prev.map((t) => (t.id === id ? res.data.thought || res.data : t))
+                prev.map((t) => (t.id === id ? toThoughtSummary(updated) : t))
             );
+            return updated;
         } catch (err) {
             console.error("Failed to edit thought:", err);
+            throw err;
         }
     }, []);
 
@@ -90,9 +117,10 @@ export function ThoughtsProvider({ children }) {
             editThought,
             deleteThought,
             deleteThoughts,
+            fetchThoughtById,
             refreshThoughts: fetchThoughts
         }),
-        [thoughts, loading, addThought, editThought, deleteThought, deleteThoughts]
+        [thoughts, loading, addThought, editThought, deleteThought, deleteThoughts, fetchThoughtById]
     );
 
     return (
