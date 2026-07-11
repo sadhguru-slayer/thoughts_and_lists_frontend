@@ -10,14 +10,15 @@ import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-    { href: "/", label: "Journal" },
-    { href: "/thoughts", label: "Notes" },
+    { href: "/", label: "Dashboard" },
+    { href: "/journals", label: "Journals" },
     { href: "/tasks", label: "Tasks" },
+    { href: "/thoughts", label: "Notes" },
 ];
 
 function isJournalActive(pathname) {
-    if (pathname === "/" || pathname === "/create") return true;
-    if (pathname.match(/^\/\d+/)) return true;
+    if (pathname === "/journals" || pathname === "/create") return true;
+    if (pathname.match(/^\/\d+/)) return true; // assuming this is for journal details
     return false;
 }
 
@@ -41,7 +42,8 @@ export default function Header() {
     const isJournal = isJournalActive(pathname);
 
     const navActive = (item) => {
-        if (item.href === "/") return isJournal;
+        if (item.href === "/") return pathname === "/";
+        if (item.href === "/journals") return isJournal;
         if (item.href === "/thoughts") return isThoughts;
         if (item.href === "/tasks") return isTasks;
         return pathname.startsWith(item.href);

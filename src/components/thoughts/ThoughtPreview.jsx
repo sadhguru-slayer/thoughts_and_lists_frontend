@@ -94,7 +94,7 @@ export default function ThoughtPreview({ thought, onClose }) {
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto px-5 py-2 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                        <div className="flex-1 overflow-y-auto px-5 py-2 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed preview-content">
                             {loading ? (
                                 <div className="flex items-center justify-center py-8 text-zinc-400">
                                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -102,10 +102,82 @@ export default function ThoughtPreview({ thought, onClose }) {
                             ) : error ? (
                                 <span className="text-red-400">{error}</span>
                             ) : displayThought.content ? (
-                                displayThought.content
+                                <div dangerouslySetInnerHTML={{ __html: displayThought.content }} />
                             ) : (
                                 <span className="text-zinc-400 italic">No content.</span>
                             )}
+                            <style jsx global>{`
+                                .preview-content ul[data-type="taskList"] {
+                                    list-style: none;
+                                    padding: 0;
+                                }
+                                .preview-content ul[data-type="taskList"] li {
+                                    display: flex;
+                                    align-items: flex-start;
+                                    margin-bottom: 0.5rem;
+                                }
+                                .preview-content ul[data-type="taskList"] li > label {
+                                    margin-right: 0.5rem;
+                                    user-select: none;
+                                    margin-top: 0.2rem;
+                                }
+                                .preview-content ul[data-type="taskList"] li > label input[type="checkbox"] {
+                                    accent-color: #3b82f6;
+                                    width: 1.1rem;
+                                    height: 1.1rem;
+                                    pointer-events: none;
+                                }
+                                .preview-content ul {
+                                    list-style-type: disc;
+                                    padding-left: 1.5rem;
+                                }
+                                .preview-content ol {
+                                    list-style-type: decimal;
+                                    padding-left: 1.5rem;
+                                }
+                                .preview-content p {
+                                    margin-bottom: 0.5rem;
+                                }
+                                .preview-content strong {
+                                    font-weight: 700;
+                                }
+                                .preview-content pre {
+                                    background: #f4f4f5;
+                                    border-radius: 0.5rem;
+                                    padding: 0.75rem 1rem;
+                                    color: #27272a;
+                                    font-family: monospace;
+                                    font-size: 0.875rem;
+                                    overflow-x: auto;
+                                    margin-top: 0.5rem;
+                                    margin-bottom: 0.5rem;
+                                }
+                                .preview-content code {
+                                    background: #f4f4f5;
+                                    padding: 0.15rem 0.3rem;
+                                    border-radius: 0.25rem;
+                                    font-family: monospace;
+                                    font-size: 0.875rem;
+                                    color: #ef4444;
+                                }
+                                .dark .preview-content pre, .dark .preview-content code {
+                                    background: #27272a;
+                                    color: #e4e4e7;
+                                }
+                                .dark .preview-content code {
+                                    color: #fca5a5;
+                                }
+                                .preview-content pre code {
+                                    background: transparent;
+                                    padding: 0;
+                                    border-radius: 0;
+                                    color: inherit;
+                                }
+                                .dark .preview-content pre code {
+                                    background: transparent;
+                                    color: inherit;
+                                }
+                            `}</style>
                         </div>
 
                         <div className="flex gap-3 px-5 py-4 border-t border-zinc-100 dark:border-zinc-800">

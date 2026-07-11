@@ -5,6 +5,7 @@ import { useThoughts } from "@/lib/ThoughtsContext";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import TiptapEditor from "@/components/thoughts/TiptapEditor";
 
 export default function ThoughtEditPage() {
     const { id } = useParams();
@@ -123,11 +124,12 @@ export default function ThoughtEditPage() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1 block">
                     Content
                 </label>
-                <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                <TiptapEditor
+                    content={content}
+                    onChange={setContent}
                     placeholder="Write your thought here..."
-                    className="flex-1 w-full text-sm bg-transparent border-none outline-none resize-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 leading-relaxed min-h-[300px]"
+                    disabled={saving}
+                    autoFocus={true}
                 />
             </div>
         </motion.div>

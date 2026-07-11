@@ -12,6 +12,11 @@ function truncate(str, max) {
     return str.length > max ? str.slice(0, max).trimEnd() + "…" : str;
 }
 
+function stripHtml(html) {
+    if (!html) return "";
+    return html.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+}
+
 export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isSelectMode, onEnterSelectMode }) {
     const longPressTimer = useRef(null);
     const didLongPress = useRef(false);
@@ -98,7 +103,7 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
                 )}
                 {(thought.content_preview || thought.content) && (
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                        {thought.content_preview || truncate(thought.content, CONTENT_MAX)}
+                        {truncate(stripHtml(thought.content_preview || thought.content), CONTENT_MAX)}
                     </p>
                 )}
             </div>
