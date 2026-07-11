@@ -9,6 +9,18 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
+const NAV_ITEMS = [
+    { href: "/", label: "Journal" },
+    { href: "/thoughts", label: "Notes" },
+    { href: "/tasks", label: "Tasks" },
+];
+
+function isJournalActive(pathname) {
+    if (pathname === "/" || pathname === "/create") return true;
+    if (pathname.match(/^\/\d+/)) return true;
+    return false;
+}
+
 export default function Header() {
     const pathname = usePathname();
     const { theme, setTheme, resolvedTheme } = useTheme();
@@ -24,7 +36,16 @@ export default function Header() {
     };
 
     const isThoughts = pathname.startsWith("/thoughts");
+    const isTasks = pathname.startsWith("/tasks");
     const isCreate = pathname === "/create";
+    const isJournal = isJournalActive(pathname);
+
+    const navActive = (item) => {
+        if (item.href === "/") return isJournal;
+        if (item.href === "/thoughts") return isThoughts;
+        if (item.href === "/tasks") return isTasks;
+        return pathname.startsWith(item.href);
+    };
 
     return (
         <header className="sticky top-0 z-50 shrink-0 border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80 transition-colors">
@@ -57,27 +78,22 @@ export default function Header() {
                         <span>Thoughts</span>
                     </Link>
 
-                    {/* Desktop Navigation Links */}
                     {user && (
                         <nav className="hidden sm:flex items-center gap-4 text-sm font-medium">
-                            <Link
-                                href="/"
-                                className={cn(
-                                    "transition-colors hover:text-zinc-900 dark:hover:text-zinc-50",
-                                    !isThoughts ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-500 dark:text-zinc-400"
-                                )}
-                            >
-                                Journal
-                            </Link>
-                            <Link
-                                href="/thoughts"
-                                className={cn(
-                                    "transition-colors hover:text-zinc-900 dark:hover:text-zinc-50",
-                                    isThoughts ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-500 dark:text-zinc-400"
-                                )}
-                            >
-                                Notes
-                            </Link>
+                            {NAV_ITEMS.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn(
+                                        "transition-colors hover:text-zinc-900 dark:hover:text-zinc-50",
+                                        navActive(item)
+                                            ? "text-zinc-900 dark:text-zinc-50"
+                                            : "text-zinc-500 dark:text-zinc-400"
+                                    )}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
                         </nav>
                     )}
                 </div>
@@ -95,7 +111,7 @@ export default function Header() {
                         )}
                     </button>
 
-                    {!isCreate && !isThoughts && user && (
+                    {isJournal && !isCreate && user && (
                         <Link
                             href="/create"
                             className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-zinc-800 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-all active:scale-95"
@@ -116,27 +132,22 @@ export default function Header() {
                 </div>
             </div>
 
-            {/* Mobile nav bottom bar */}
             {user && (
                 <nav className="flex sm:hidden items-center gap-6 px-4 pb-2 text-sm font-medium overflow-x-auto">
-                    <Link
-                        href="/"
-                        className={cn(
-                            "pb-2 border-b-2 transition-colors",
-                            !isThoughts ? "border-zinc-900 text-zinc-900 dark:border-white dark:text-zinc-50" : "border-transparent text-zinc-500 dark:text-zinc-400"
-                        )}
-                    >
-                        Journal
-                    </Link>
-                    <Link
-                        href="/thoughts"
-                        className={cn(
-                            "pb-2 border-b-2 transition-colors",
-                            isThoughts ? "border-zinc-900 text-zinc-900 dark:border-white dark:text-zinc-50" : "border-transparent text-zinc-500 dark:text-zinc-400"
-                        )}
-                    >
-                        Notes
-                    </Link>
+                    {NAV_ITEMS.map((item) => (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                                "pb-2 border-b-2 transition-colors shrink-0",
+                                navActive(item)
+                                    ? "border-zinc-900 text-zinc-900 dark:border-white dark:text-zinc-50"
+                                    : "border-transparent text-zinc-500 dark:text-zinc-400"
+                            )}
+                        >
+                            {item.label}
+                        </Link>
+                    ))}
                 </nav>
             )}
         </header>

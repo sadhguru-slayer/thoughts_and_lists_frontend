@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/AuthContext";
 import { JournalProvider } from "@/lib/JournalContext";
 import { ThoughtsProvider } from "@/lib/ThoughtsContext";
+import { TasksProvider } from "@/lib/TasksContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/journal/Header";
 import { Toaster } from "sonner";
@@ -34,12 +35,14 @@ export default function RootLayout({ children }) {
           <Toaster richColors position="top-center" />
           <AuthProvider>
             <ThoughtsProvider>
-              <JournalProvider>
-                <Header />
-                <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6 sm:px-6">
-                  {children}
-                </main>
-              </JournalProvider>
+              <TasksProvider>
+                <JournalProvider>
+                  <Header />
+                  <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6 sm:px-6">
+                    {children}
+                  </main>
+                </JournalProvider>
+              </TasksProvider>
             </ThoughtsProvider>
           </AuthProvider>
         </ThemeProvider>

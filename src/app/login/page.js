@@ -137,7 +137,7 @@ export default function LoginPage() {
                                 type="text"
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value)}
-                                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium tracking-widest outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
+                                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium tracking-widest outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:text-white dark:focus:border-zinc-100"
                                 placeholder="123456"
                                 maxLength={6}
                                 required
