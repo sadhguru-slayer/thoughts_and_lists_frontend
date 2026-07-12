@@ -66,7 +66,7 @@ export default function LoginPage() {
                         Welcome back
                     </h1>
                     <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                        Log in to continue to your Journal.
+                        Log in to continue to Memo.
                     </p>
                 </div>
 

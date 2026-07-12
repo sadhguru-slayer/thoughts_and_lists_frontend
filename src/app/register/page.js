@@ -69,7 +69,7 @@ export default function RegisterPage() {
                         Create an account
                     </h1>
                     <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                        Start writing down your thoughts today.
+                        Start writing your memos today.
                     </p>
                 </div>
 

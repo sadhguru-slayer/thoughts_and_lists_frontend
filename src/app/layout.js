@@ -19,8 +19,38 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Thoughts & Journal",
-  description: "Thoughts and lists — journal entries",
+  metadataBase: new URL('https://memo.sadguruchenu.in'),
+  title: {
+    default: "Memo",
+    template: "%s | Memo"
+  },
+  description: "Memo — your personal space to journal, capture thoughts, and track tasks. A beautifully minimalist, mobile-first app designed to declutter your mind.",
+  keywords: ["journal", "notes", "tasks", "memo", "minimalist", "tracker", "productivity", "sadguru chenu"],
+  authors: [{ name: "Sadguru Chenu" }],
+  openGraph: {
+    title: "Memo",
+    description: "Memo — your personal space to journal, capture thoughts, and track tasks.",
+    url: "https://memo.sadguruchenu.in",
+    siteName: "Memo",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Memo",
+    description: "Memo — your personal space to journal, capture thoughts, and track tasks.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({ children }) {

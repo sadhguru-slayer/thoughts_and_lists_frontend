@@ -77,7 +77,7 @@ export default function Header() {
                                 priority
                             />
                         </div>
-                        <span>Thoughts</span>
+                        <span className="bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent">Memo</span>
                     </Link>
 
                     {user && (
@@ -101,6 +101,11 @@ export default function Header() {
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">
+                    {!user && (
+                        <Link href="/about" className="text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors hidden sm:block">
+                            About
+                        </Link>
+                    )}
                     <button
                         onClick={toggleTheme}
                         className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"

@@ -29,13 +29,15 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         if (!loading) {
-            const publicRoutes = ["/welcome", "/login", "/register", "/forgot-password"];
+            const guestOnlyRoutes = ["/welcome", "/login", "/register", "/forgot-password"];
+            const publicRoutes = [...guestOnlyRoutes, "/about", "/privacy", "/terms"];
+            
             // Redirect unauthenticated users
             if (!user && !publicRoutes.includes(pathname)) {
                 router.push("/welcome");
             }
-            // Redirect authenticated users away from public routes
-            else if (user && publicRoutes.includes(pathname)) {
+            // Redirect authenticated users away from guest-only routes
+            else if (user && guestOnlyRoutes.includes(pathname)) {
                 router.push("/");
             }
         }

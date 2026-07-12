@@ -6,10 +6,11 @@ import { ArrowRight, BookOpen, Sparkles, Brain, Lock } from "lucide-react";
 
 export default function WelcomePage() {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[85vh] text-center w-full relative">
+        <div className="flex flex-col items-center justify-between min-h-screen w-full relative">
+            <main className="flex flex-col items-center justify-center flex-1 w-full relative pt-12 pb-16">
 
             {/* Background glowing orb effect for premium modern feel */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-emerald-400/20 dark:bg-emerald-600/20 blur-[100px] rounded-full point-events-none -z-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-violet-400/20 dark:bg-violet-600/20 blur-[100px] rounded-full point-events-none -z-10" />
 
             {/* Hero Section */}
             <motion.div
@@ -20,16 +21,16 @@ export default function WelcomePage() {
             >
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-300 shadow-sm">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Your personal digital sanctuary</span>
+                    <span>Your personal digital memo space</span>
                 </div>
 
                 <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 mb-6 leading-[1.15]">
-                    Capture your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400">Thoughts.</span><br />
+                    Capture with <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-500">Memo.</span><br />
                     Organize your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">Life.</span>
                 </h1>
 
                 <p className="max-w-lg mx-auto text-base sm:text-lg text-zinc-500 dark:text-zinc-400 mb-10 leading-relaxed">
-                    A beautifully minimalist mobile-first journal seamlessly designed to declutter your mind and track your daily journey.
+                    A beautifully minimalist, mobile-first app to journal your days, capture quick ideas, and stay on top of your tasks.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -68,9 +69,9 @@ export default function WelcomePage() {
                     <div className="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 mb-4 inline-flex">
                         <Brain className="w-6 h-6" />
                     </div>
-                    <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">Thoughts & Ideas</h3>
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">Quick Memos</h3>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                        A dedicated spaceless canvas for throwing in quick notes and categorizing random fast ideas.
+                        A dedicated canvas for throwing in quick notes and categorizing random fast ideas on the go.
                     </p>
                 </div>
 
@@ -84,6 +85,27 @@ export default function WelcomePage() {
                     </p>
                 </div>
             </motion.div>
+            </main>
+
+            {/* SEO & Legal Footer */}
+            <footer className="w-full py-8 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-white/30 dark:bg-zinc-950/30 backdrop-blur-sm mt-auto">
+                <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+                    <div>
+                        &copy; {new Date().getFullYear()} Memo App. Built by Sadguru Chenu.
+                    </div>
+                    <nav className="flex gap-6">
+                        <Link href="/about" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+                            About
+                        </Link>
+                        <Link href="/privacy" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+                            Privacy Policy
+                        </Link>
+                        <Link href="/terms" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+                            Terms of Service
+                        </Link>
+                    </nav>
+                </div>
+            </footer>
         </div>
     );
 }
