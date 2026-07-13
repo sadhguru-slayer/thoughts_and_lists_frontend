@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+import OtpInput from "@/components/ui/OtpInput";
 
 const passwordRules = [
     {
@@ -28,7 +29,8 @@ export default function RegisterPage() {
     const [step, setStep] = useState(1);
     
     const [email, setEmail] = useState("");
-    const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+    const [otp, setOtp] = useState("");
+
     const [registerToken, setRegisterToken] = useState("");
     
     const [password, setPassword] = useState("");
@@ -55,31 +57,9 @@ export default function RegisterPage() {
         }
     };
 
-    const handleOtpChange = (index, value) => {
-        if (!/^[0-9]*$/.test(value)) return;
-        
-        const newOtp = [...otp];
-        newOtp[index] = value;
-        setOtp(newOtp);
-
-        // Auto-focus next input
-        if (value && index < 5) {
-            const nextInput = document.getElementById(`otp-${index + 1}`);
-            if (nextInput) nextInput.focus();
-        }
-    };
-
-    const handleOtpKeyDown = (index, e) => {
-        if (e.key === "Backspace" && !otp[index] && index > 0) {
-            const prevInput = document.getElementById(`otp-${index - 1}`);
-            if (prevInput) prevInput.focus();
-        }
-    };
-
     const handleOtpSubmit = async (e) => {
         e.preventDefault();
-        const otpCode = otp.join("");
-        if (otpCode.length !== 6) {
+        if (otp.length !== 6) {
             setError("Please enter a valid 6-digit OTP.");
             return;
         }
@@ -87,7 +67,7 @@ export default function RegisterPage() {
         setError("");
         setLoading(true);
         try {
-            const token = await verifyRegisterOtp(email, otpCode);
+            const token = await verifyRegisterOtp(email, otp);
             setRegisterToken(token);
             setStep(3);
         } catch (err) {
@@ -201,25 +181,12 @@ export default function RegisterPage() {
                                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
                                     We sent a 6-digit code to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{email}</span>
                                 </p>
-                                <div className="flex justify-between gap-2 pt-2">
-                                    {otp.map((digit, index) => (
-                                        <input
-                                            key={index}
-                                            id={`otp-${index}`}
-                                            type="text"
-                                            maxLength={1}
-                                            value={digit}
-                                            onChange={(e) => handleOtpChange(index, e.target.value)}
-                                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                                            className="w-12 h-12 text-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-lg font-bold text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100 outline-none transition"
-                                        />
-                                    ))}
-                                </div>
+                                <OtpInput value={otp} onChange={setOtp} />
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={loading || otp.join("").length !== 6}
+                                disabled={loading || otp.length !== 6}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white shadow-md transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 active:scale-[0.98] disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                             >
                                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify Code"}

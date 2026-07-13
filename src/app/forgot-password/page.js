@@ -7,6 +7,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import OtpInput from "@/components/ui/OtpInput";
 
 // step: 'email' | 'otp' | 'password'
 export default function ForgotPasswordPage() {
@@ -57,6 +58,10 @@ export default function ForgotPasswordPage() {
     // ── Step 2: verify OTP with backend — only advances if backend confirms ──
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
+        if (otp.length !== 6) {
+            setError("Please enter a valid 6-digit OTP.");
+            return;
+        }
         setError("");
         setLoading(true);
         try {
@@ -170,16 +175,7 @@ export default function ForgotPasswordPage() {
                                 <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                                     OTP Code
                                 </label>
-                                <input
-                                    type="text"
-                                    value={otp}
-                                    onChange={(e) => setOtp(e.target.value)}
-                                    className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium tracking-widest outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:focus:border-zinc-100"
-                                    placeholder="123456"
-                                    maxLength={6}
-                                    autoFocus
-                                    required
-                                />
+                                <OtpInput value={otp} onChange={setOtp} />
                             </motion.div>
                         )}
                     </AnimatePresence>

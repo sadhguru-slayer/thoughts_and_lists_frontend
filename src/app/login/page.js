@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import OtpInput from "@/components/ui/OtpInput";
 
 export default function LoginPage() {
     const { login, requestOtp, verifyOtp } = useAuth();
@@ -33,6 +34,11 @@ export default function LoginPage() {
                     setOtpSent(true);
                     setMessage("OTP sent successfully. Please check your email.");
                 } else {
+                    if (otp.length !== 6) {
+                        setError("Please enter a valid 6-digit OTP.");
+                        setLoading(false);
+                        return;
+                    }
                     await verifyOtp(username, otp);
                 }
             } else {
@@ -133,15 +139,7 @@ export default function LoginPage() {
                             <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                                 OTP Code
                             </label>
-                            <input
-                                type="text"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium tracking-widest outline-none transition hover:border-zinc-300 focus:border-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:text-white dark:focus:border-zinc-100"
-                                placeholder="123456"
-                                maxLength={6}
-                                required
-                            />
+                            <OtpInput value={otp} onChange={setOtp} />
                         </div>
                     )}
 
