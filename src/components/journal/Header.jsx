@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-    { href: "/", label: "Dashboard" },
+    { href: "/dashboard", label: "Dashboard" },
     { href: "/journals", label: "Journals" },
     { href: "/tasks", label: "Tasks" },
     { href: "/thoughts", label: "Notes" },
@@ -42,7 +42,7 @@ export default function Header() {
     const isJournal = isJournalActive(pathname);
 
     const navActive = (item) => {
-        if (item.href === "/") return pathname === "/";
+        if (item.href === "/dashboard") return pathname === "/dashboard";
         if (item.href === "/journals") return isJournal;
         if (item.href === "/thoughts") return isThoughts;
         if (item.href === "/tasks") return isTasks;

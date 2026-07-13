@@ -29,16 +29,16 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         if (!loading) {
-            const guestOnlyRoutes = ["/welcome", "/login", "/register", "/forgot-password"];
+            const guestOnlyRoutes = ["/", "/login", "/register", "/forgot-password"];
             const publicRoutes = [...guestOnlyRoutes, "/about", "/privacy", "/terms"];
             
-            // Redirect unauthenticated users
+            console.log(guestOnlyRoutes,publicRoutes,pathname);
             if (!user && !publicRoutes.includes(pathname)) {
-                router.push("/welcome");
+                router.replace("/login");
             }
             // Redirect authenticated users away from guest-only routes
             else if (user && guestOnlyRoutes.includes(pathname)) {
-                router.push("/");
+                router.push("/dashboard");
             }
         }
     }, [user, loading, pathname, router]);
@@ -57,7 +57,7 @@ export function AuthProvider({ children }) {
             Cookies.set("refresh_token", res.data.refresh_token, { expires: 7, path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
-        router.push("/");
+        router.push("/dashboard");
     };
 
     const requestOtp = async (email) => {
@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
             Cookies.set("refresh_token", res.data.refresh_token, { expires: 7, path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
-        router.push("/");
+        router.push("/dashboard");
     };
 
     const requestPasswordReset = async (email) => {
@@ -91,22 +91,45 @@ export function AuthProvider({ children }) {
         );
     };
 
-    const register = async (email, password) => {
-        // Backend register endpoint requires: email, password, role 'user'
-        await api.post("/api/v1/auth/register", { email, password, role: "user" });
-        // We login using form_data.username which actually maps to email in the token endpoint handler
-        await login(email, password);
+    const requestRegisterOtp = async (email) => {
+        await api.post("/api/v1/auth/request-register-otp", { email });
+    };
+
+    const verifyRegisterOtp = async (email, otp) => {
+        const res = await api.post("/api/v1/auth/verify-register-otp", { email, otp });
+        return res.data.register_token;
+    };
+
+    const register = async (registerToken, password) => {
+        const res = await api.post(
+            "/api/v1/auth/register", 
+            { password, role: "user" },
+            { headers: { Authorization: `Bearer ${registerToken}` } }
+        );
+        Cookies.set("access_token", res.data.access_token, { expires: 7, path: "/", sameSite: "Lax" });
+        if (res.data.refresh_token) {
+            Cookies.set("refresh_token", res.data.refresh_token, { expires: 7, path: "/", sameSite: "Lax" });
+        }
+        setUser({ token: res.data.access_token });
+        router.push("/dashboard");
     };
 
     const logout = () => {
         Cookies.remove("access_token", { path: "/" });
         Cookies.remove("refresh_token", { path: "/" });
         setUser(null);
-        router.push("/login");
+
+        console.log(pathname);
+
+        if (pathname === "/") {
+            router.replace("/");
+        } else {
+            router.replace("/login");
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, requestOtp, verifyOtp, requestPasswordReset, verifyResetOtp, resetPassword }}>
+        <AuthContext.Provider value={{ user, loading, login, requestRegisterOtp, verifyRegisterOtp, register, logout, requestOtp, verifyOtp, requestPasswordReset, verifyResetOtp, resetPassword }}>
             {!loading && children}
         </AuthContext.Provider>
     );
