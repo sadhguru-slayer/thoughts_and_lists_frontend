@@ -104,20 +104,18 @@ export default function ThoughtsPage() {
                 {/* Notes grid */}
                 {!loading && (
                     <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-                        <AnimatePresence>
-                            {thoughts.map((thought) => (
-                                <div key={thought.id} className="break-inside-avoid">
-                                    <ThoughtCard
-                                        thought={thought}
-                                        isSelected={selectedIds.includes(thought.id)}
-                                        onSelect={handleSelect}
-                                        onOpen={handleOpen}
-                                        isSelectMode={isSelectMode}
-                                        onEnterSelectMode={handleEnterSelectMode}
-                                    />
-                                </div>
-                            ))}
-                        </AnimatePresence>
+                        {thoughts.map((thought) => (
+                            <div key={thought.id} className="break-inside-avoid">
+                                <ThoughtCard
+                                    thought={thought}
+                                    isSelected={selectedIds.includes(thought.id)}
+                                    onSelect={handleSelect}
+                                    onOpen={handleOpen}
+                                    isSelectMode={isSelectMode}
+                                    onEnterSelectMode={handleEnterSelectMode}
+                                />
+                            </div>
+                        ))}
                     </div>
                 )}
 

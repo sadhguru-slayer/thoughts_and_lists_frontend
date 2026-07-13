@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useCallback } from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const TITLE_MAX = 60;
@@ -48,12 +47,7 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
     };
 
     return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            whileTap={{ scale: 0.97 }}
+        <div
             onClick={handleClick}
             onMouseDown={startLongPress}
             onMouseUp={cancelLongPress}
@@ -97,16 +91,16 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
             {/* Content */}
             <div className={cn("flex flex-col gap-1 transition-all", isSelectMode ? "pl-7" : "pl-0")}>
                 {thought.title && (
-                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight leading-snug">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight leading-snug break-words overflow-wrap-anywhere">
                         {truncate(thought.title, TITLE_MAX)}
                     </h3>
                 )}
                 {(thought.content_preview || thought.content) && (
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed break-words overflow-wrap-anywhere">
                         {truncate(stripHtml(thought.content_preview || thought.content), CONTENT_MAX)}
                     </p>
                 )}
             </div>
-        </motion.div>
+        </div>
     );
 }

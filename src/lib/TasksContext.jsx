@@ -83,18 +83,34 @@ export function TasksProvider({ children }) {
     }, []);
 
     const completeTask = useCallback(async (id) => {
-        const res = await api.patch(`/api/v1/tasks/${id}/complete`);
-        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...res.data } : t)));
-        await fetchTasks(filters);
-        return res.data;
-    }, [fetchTasks, filters]);
+        // Optimistic update — flip immediately so UI responds instantly
+        const previous = tasks.find((t) => t.id === id);
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: true, status: "completed" } : t)));
+        try {
+            const res = await api.patch(`/api/v1/tasks/${id}/complete`);
+            // Sync with server truth
+            setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...res.data } : t)));
+        } catch (err) {
+            // Rollback on failure
+            setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...previous } : t)));
+            console.error("Failed to complete task:", err);
+        }
+    }, [tasks]);
 
     const uncompleteTask = useCallback(async (id) => {
-        const res = await api.patch(`/api/v1/tasks/${id}/uncomplete`);
-        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...res.data } : t)));
-        await fetchTasks(filters);
-        return res.data;
-    }, [fetchTasks, filters]);
+        // Optimistic update — flip immediately so UI responds instantly
+        const previous = tasks.find((t) => t.id === id);
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: false, status: "pending" } : t)));
+        try {
+            const res = await api.patch(`/api/v1/tasks/${id}/uncomplete`);
+            // Sync with server truth
+            setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...res.data } : t)));
+        } catch (err) {
+            // Rollback on failure
+            setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...previous } : t)));
+            console.error("Failed to uncomplete task:", err);
+        }
+    }, [tasks]);
 
     const archiveTask = useCallback(async (id) => {
         const res = await api.patch(`/api/v1/tasks/${id}/archive`);
