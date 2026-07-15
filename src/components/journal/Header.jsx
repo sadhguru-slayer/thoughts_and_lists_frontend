@@ -57,27 +57,26 @@ export default function Header() {
                         href="/"
                         className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 hover:opacity-80 transition-opacity flex items-center gap-2"
                     >
-                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[0.65rem] dark:hidden">
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full dark:hidden">
                             <Image
                                 src="/light_theme_logo.jpeg"
                                 alt="Logo Light"
                                 fill
-                                sizes="40px"
-                                className="object-cover scale-[1.3]"
+                                sizes="200px"
+                                className="object-cover scale-[1.06]"
                                 priority
                             />
                         </div>
-                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[0.65rem] hidden dark:block">
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full hidden dark:block">
                             <Image
                                 src="/light_theme_logo.jpeg"
                                 alt="Logo Dark"
                                 fill
-                                sizes="40px"
-                                className="object-cover scale-[1.3]"
+                                sizes="200px"
+                                className="object-cover scale-[1.06]"
                                 priority
                             />
                         </div>
-                        <span className="bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent">Memo</span>
                     </Link>
 
                     {user && (
