@@ -69,7 +69,7 @@ export default function Header() {
                         </div>
                         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[0.65rem] hidden dark:block">
                             <Image
-                                src="/dark_theme_logo.jpeg"
+                                src="/light_theme_logo.jpeg"
                                 alt="Logo Dark"
                                 fill
                                 sizes="40px"
