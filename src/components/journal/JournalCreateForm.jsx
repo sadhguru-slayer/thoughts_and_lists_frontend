@@ -384,7 +384,7 @@ export default function JournalCreateForm({
             value={localDatetime}
             onChange={(e) => setLocalDatetime(e.target.value)}
             disabled={!ready || isSubmitting}
-            className={cn(inputClass, "max-w-md")}
+            className={cn(inputClass, "max-w-md", "dark:[color-scheme:dark]")}
           />
         </div>
 

@@ -216,7 +216,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
             type="datetime-local"
             value={draft.date}
             onChange={(e) => setDraft((prev) => ({ ...prev, date: e.target.value }))}
-            className="max-w-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            className="max-w-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:[color-scheme:dark]"
           />
         ) : (
           <time

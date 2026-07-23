@@ -207,7 +207,7 @@ export default function TaskDetailSheet({ task, onClose }) {
                                             type="datetime-local"
                                             value={dueDate}
                                             onChange={(e) => setDueDate(e.target.value)}
-                                            className="w-full text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 outline-none text-zinc-700 dark:text-zinc-200"
+                                            className="w-full text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 outline-none text-zinc-700 dark:text-zinc-200 dark:[color-scheme:dark]"
                                         />
                                     </div>
 
@@ -219,7 +219,7 @@ export default function TaskDetailSheet({ task, onClose }) {
                                             type="datetime-local"
                                             value={reminderAt}
                                             onChange={(e) => setReminderAt(e.target.value)}
-                                            className="w-full text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 outline-none text-zinc-700 dark:text-zinc-200"
+                                            className="w-full text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 outline-none text-zinc-700 dark:text-zinc-200 dark:[color-scheme:dark]"
                                         />
                                         <p className="text-[11px] text-zinc-400 mt-1">
                                             Leave blank to use the due date as reminder.

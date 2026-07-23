@@ -130,7 +130,7 @@ export default function TaskInput() {
                                         value={dueDate}
                                         onChange={(e) => setDueDate(e.target.value)}
                                         disabled={isSubmitting}
-                                        className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none"
+                                        className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none dark:[color-scheme:dark]"
                                     />
                                 </div>
 
@@ -144,7 +144,7 @@ export default function TaskInput() {
                                         value={reminderAt}
                                         onChange={(e) => setReminderAt(e.target.value)}
                                         disabled={isSubmitting}
-                                        className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none"
+                                        className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none dark:[color-scheme:dark]"
                                     />
                                 </div>
                             </div>
