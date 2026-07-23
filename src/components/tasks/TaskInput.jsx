@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTasks } from "@/lib/TasksContext";
-import { Plus, Loader2, ChevronDown } from "lucide-react";
+import { Plus, Loader2, ChevronDown, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fromDatetimeLocalValue } from "@/lib/taskUtils";
 
@@ -15,6 +15,7 @@ export default function TaskInput() {
     const [description, setDescription] = useState("");
     const [priority, setPriority] = useState("MEDIUM");
     const [dueDate, setDueDate] = useState("");
+    const [reminderAt, setReminderAt] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { addTask } = useTasks();
@@ -24,6 +25,7 @@ export default function TaskInput() {
         setDescription("");
         setPriority("MEDIUM");
         setDueDate("");
+        setReminderAt("");
         setIsExpanded(false);
     };
 
@@ -42,6 +44,8 @@ export default function TaskInput() {
                 description: description.trim() || null,
                 priority,
                 due_date: fromDatetimeLocalValue(dueDate),
+                // Only send reminder_at if explicitly set; backend will fall back to due_date otherwise
+                reminder_at: reminderAt ? fromDatetimeLocalValue(reminderAt) : null,
             });
             reset();
         } catch (err) {
@@ -49,7 +53,7 @@ export default function TaskInput() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [title, description, priority, dueDate, addTask]);
+    }, [title, description, priority, dueDate, reminderAt, addTask]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -119,13 +123,30 @@ export default function TaskInput() {
                                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
                                 </div>
 
-                                <input
-                                    type="datetime-local"
-                                    value={dueDate}
-                                    onChange={(e) => setDueDate(e.target.value)}
-                                    disabled={isSubmitting}
-                                    className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none"
-                                />
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Due date</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={dueDate}
+                                        onChange={(e) => setDueDate(e.target.value)}
+                                        disabled={isSubmitting}
+                                        className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1">
+                                        <Bell className="w-3 h-3" /> Reminder
+                                        <span className="normal-case font-normal text-zinc-400">(defaults to due date)</span>
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={reminderAt}
+                                        onChange={(e) => setReminderAt(e.target.value)}
+                                        disabled={isSubmitting}
+                                        className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none"
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex justify-end gap-2 pt-1">

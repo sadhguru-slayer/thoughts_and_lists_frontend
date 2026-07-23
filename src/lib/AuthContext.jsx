@@ -128,8 +128,18 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const getMe = async () => {
+        const res = await api.get("/api/v1/auth/me");
+        return res.data;
+    };
+
+    const updateSettings = async (settings) => {
+        const res = await api.patch("/api/v1/auth/me/settings", settings);
+        return res.data;
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, requestRegisterOtp, verifyRegisterOtp, register, logout, requestOtp, verifyOtp, requestPasswordReset, verifyResetOtp, resetPassword }}>
+        <AuthContext.Provider value={{ user, loading, login, requestRegisterOtp, verifyRegisterOtp, register, logout, requestOtp, verifyOtp, requestPasswordReset, verifyResetOtp, resetPassword, getMe, updateSettings }}>
             {!loading && children}
         </AuthContext.Provider>
     );

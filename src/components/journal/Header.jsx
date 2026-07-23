@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, Plus } from "lucide-react";
+import { Moon, Sun, Plus, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
@@ -128,9 +128,19 @@ export default function Header() {
                     )}
 
                     {user && (
+                        <Link
+                            href="/settings"
+                            className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            aria-label="Settings"
+                        >
+                            <Settings className="h-5 w-5" />
+                        </Link>
+                    )}
+
+                    {user && (
                         <button
                             onClick={logout}
-                            className="text-xs font-semibold text-zinc-500 hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-400 ml-2 sm:ml-4 transition-colors p-2"
+                            className="text-xs font-semibold text-zinc-500 hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-400 ml-1 sm:ml-2 transition-colors p-2 hidden sm:block"
                         >
                             Logout
                         </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Trash2, Archive, Loader2, Save } from "lucide-react";
+import { X, Trash2, Archive, Loader2, Save, Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTasks } from "@/lib/TasksContext";
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/taskUtils";
@@ -22,6 +22,7 @@ export default function TaskDetailSheet({ task, onClose }) {
     const [priority, setPriority] = useState("MEDIUM");
     const [status, setStatus] = useState("TODO");
     const [dueDate, setDueDate] = useState("");
+    const [reminderAt, setReminderAt] = useState("");
 
     useEffect(() => {
         const handleKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -50,6 +51,10 @@ export default function TaskDetailSheet({ task, onClose }) {
                 setPriority(data.priority || "MEDIUM");
                 setStatus(data.status || "TODO");
                 setDueDate(toDatetimeLocalValue(data.due_date));
+                // Show reminder_at if different from due_date; otherwise show blank (due_date is the default)
+                const reminderVal = toDatetimeLocalValue(data.reminder_at);
+                const dueDateVal = toDatetimeLocalValue(data.due_date);
+                setReminderAt(reminderVal !== dueDateVal ? reminderVal : "");
             })
             .catch(() => {
                 if (!cancelled) setError("Failed to load task.");
@@ -64,12 +69,15 @@ export default function TaskDetailSheet({ task, onClose }) {
     const handleSave = async () => {
         setSaving(true);
         try {
+            const dueDateISO = fromDatetimeLocalValue(dueDate);
             await editTask(task.id, {
                 title: title.trim(),
                 description: description.trim() || null,
                 priority,
                 status,
-                due_date: fromDatetimeLocalValue(dueDate),
+                due_date: dueDateISO,
+                // Send explicit reminder if set; null lets backend use due_date
+                reminder_at: reminderAt ? fromDatetimeLocalValue(reminderAt) : null,
             });
             onClose();
         } catch (err) {
@@ -201,6 +209,21 @@ export default function TaskDetailSheet({ task, onClose }) {
                                             onChange={(e) => setDueDate(e.target.value)}
                                             className="w-full text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 outline-none text-zinc-700 dark:text-zinc-200"
                                         />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1 flex items-center gap-1.5">
+                                            <Bell className="w-3.5 h-3.5" /> Reminder
+                                        </label>
+                                        <input
+                                            type="datetime-local"
+                                            value={reminderAt}
+                                            onChange={(e) => setReminderAt(e.target.value)}
+                                            className="w-full text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 outline-none text-zinc-700 dark:text-zinc-200"
+                                        />
+                                        <p className="text-[11px] text-zinc-400 mt-1">
+                                            Leave blank to use the due date as reminder.
+                                        </p>
                                     </div>
                                 </>
                             )}
