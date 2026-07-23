@@ -9,11 +9,11 @@ import { useRouter } from "next/navigation";
 export default function SettingsPage() {
     const { getMe, updateSettings, requestPasswordReset, logout } = useAuth();
     const router = useRouter();
-    
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [user, setUser] = useState(null);
-    
+
     const [journalReminderActive, setJournalReminderActive] = useState(true);
     const [journalReminderTime, setJournalReminderTime] = useState("22:00:00");
     const [timezone, setTimezone] = useState("");
@@ -25,7 +25,7 @@ export default function SettingsPage() {
                 setUser(userData);
                 setJournalReminderActive(userData.journal_reminder_active ?? true);
                 setJournalReminderTime(userData.journal_reminder_time || "22:00:00");
-                
+
                 // Automatically set timezone if not set properly or just rely on browser
                 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
                 setTimezone(userData.timezone || browserTz);
@@ -83,7 +83,7 @@ export default function SettingsPage() {
 
             <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">Reminders</h2>
-                
+
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
                         <div>
@@ -93,9 +93,9 @@ export default function SettingsPage() {
                             <p className="text-sm text-zinc-500 dark:text-zinc-400">Receive an email reminder to write your journal.</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                className="sr-only peer" 
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
                                 checked={journalReminderActive}
                                 onChange={(e) => setJournalReminderActive(e.target.checked)}
                             />
@@ -109,23 +109,23 @@ export default function SettingsPage() {
                                 <label className="text-sm font-medium leading-none text-zinc-900 dark:text-zinc-100 mb-2 block">
                                     Reminder Time
                                 </label>
-                                <input 
-                                    type="time" 
+                                <input
+                                    type="time"
                                     value={journalReminderTime}
                                     onChange={(e) => setJournalReminderTime(e.target.value)}
-                                    className="flex h-10 w-full md:w-[200px] rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-300 dark:[color-scheme:dark]" 
+                                    className="flex h-10 w-full md:w-[200px] rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:text-white dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-300 dark:[color-scheme:dark]"
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="text-sm font-medium leading-none text-zinc-900 dark:text-zinc-100 mb-2 block">
                                     Timezone
                                 </label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     value={timezone}
                                     readOnly
-                                    className="flex h-10 w-full md:w-[200px] rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 focus-visible:outline-none cursor-not-allowed" 
+                                    className="flex h-10 w-full md:w-[200px] rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 focus-visible:outline-none cursor-not-allowed"
                                 />
                                 <p className="text-xs text-zinc-500 mt-1">Timezone is detected automatically.</p>
                             </div>
@@ -151,7 +151,7 @@ export default function SettingsPage() {
 
             <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">Account Security</h2>
-                
+
                 <div className="space-y-4">
                     <div>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">If you need to change your password, you can request a password reset OTP. This will log you out immediately.</p>
@@ -164,7 +164,7 @@ export default function SettingsPage() {
                     </div>
                 </div>
             </div>
-            
+
             <div className="flex justify-center mt-8 sm:hidden">
                 <button
                     onClick={logout}
