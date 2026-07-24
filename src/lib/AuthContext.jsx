@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
             const guestOnlyRoutes = ["/", "/login", "/register", "/forgot-password"];
             const publicRoutes = [...guestOnlyRoutes, "/about", "/privacy", "/terms"];
             
-            console.log(guestOnlyRoutes,publicRoutes,pathname);
+            // console.log(guestOnlyRoutes,publicRoutes,pathname);
             if (!user && !publicRoutes.includes(pathname)) {
                 router.replace("/login");
             }
@@ -119,7 +119,7 @@ export function AuthProvider({ children }) {
         Cookies.remove("refresh_token", { path: "/" });
         setUser(null);
 
-        console.log(pathname);
+        // console.log(pathname);
 
         if (pathname === "/") {
             router.replace("/");
