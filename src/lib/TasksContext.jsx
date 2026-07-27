@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import api from "./api";
 import { useAuth } from "./AuthContext";
+import { notify } from "./notify";
 
 const TasksContext = createContext(null);
 
@@ -83,31 +84,27 @@ export function TasksProvider({ children }) {
     }, []);
 
     const completeTask = useCallback(async (id) => {
-        // Optimistic update — flip immediately so UI responds instantly
         const previous = tasks.find((t) => t.id === id);
         setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: true, status: "completed" } : t)));
         try {
             const res = await api.patch(`/api/v1/tasks/${id}/complete`);
-            // Sync with server truth
             setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...res.data } : t)));
         } catch (err) {
-            // Rollback on failure
             setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...previous } : t)));
+            notify.error("Failed to complete task", "Changes have been reverted.");
             console.error("Failed to complete task:", err);
         }
     }, [tasks]);
 
     const uncompleteTask = useCallback(async (id) => {
-        // Optimistic update — flip immediately so UI responds instantly
         const previous = tasks.find((t) => t.id === id);
         setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: false, status: "pending" } : t)));
         try {
             const res = await api.patch(`/api/v1/tasks/${id}/uncomplete`);
-            // Sync with server truth
             setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...res.data } : t)));
         } catch (err) {
-            // Rollback on failure
             setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...previous } : t)));
+            notify.error("Could not undo", "Changes have been reverted.");
             console.error("Failed to uncomplete task:", err);
         }
     }, [tasks]);

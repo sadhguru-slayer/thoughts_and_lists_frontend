@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, Plus, Settings } from "lucide-react";
+import { Moon, Sun, Plus, Settings, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
@@ -18,7 +18,7 @@ const NAV_ITEMS = [
 
 function isJournalActive(pathname) {
     if (pathname === "/journals" || pathname === "/create") return true;
-    if (pathname.match(/^\/\d+/)) return true; // assuming this is for journal details
+    if (pathname.match(/^\/\d+/)) return true;
     return false;
 }
 
@@ -51,119 +51,133 @@ export default function Header() {
 
     return (
         <header className="sticky top-0 z-50 shrink-0 border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80 transition-colors">
-            <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+            <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6">
+                {/* Left: Logo + Nav */}
                 <div className="flex items-center gap-6">
                     <Link
                         href="/"
-                        className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 hover:opacity-80 transition-opacity flex items-center gap-2"
+                        className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0"
                     >
-                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full dark:hidden">
+                        <div className="relative h-8 w-8 overflow-hidden rounded-full">
                             <Image
                                 src="/light_theme_logo.jpeg"
-                                alt="Logo Light"
+                                alt="Memo"
                                 fill
-                                sizes="200px"
+                                sizes="32px"
                                 className="object-cover scale-[1.06]"
                                 priority
                             />
                         </div>
-                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full hidden dark:block">
-                            <Image
-                                src="/light_theme_logo.jpeg"
-                                alt="Logo Dark"
-                                fill
-                                sizes="200px"
-                                className="object-cover scale-[1.06]"
-                                priority
-                            />
-                        </div>
+                        <span className="hidden sm:block text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                            Memo
+                        </span>
                     </Link>
 
                     {user && (
-                        <nav className="hidden sm:flex items-center gap-4 text-sm font-medium">
-                            {NAV_ITEMS.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn(
-                                        "transition-colors hover:text-zinc-900 dark:hover:text-zinc-50",
-                                        navActive(item)
-                                            ? "text-zinc-900 dark:text-zinc-50"
-                                            : "text-zinc-500 dark:text-zinc-400"
-                                    )}
-                                >
-                                    {item.label}
-                                </Link>
-                            ))}
+                        <nav className="hidden sm:flex items-center gap-1">
+                            {NAV_ITEMS.map((item) => {
+                                const active = navActive(item);
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                                            active
+                                                ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
+                                                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                        )}
+                                    >
+                                        {item.label}
+                                    </Link>
+                                );
+                            })}
                         </nav>
                     )}
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-4">
+                {/* Right: actions */}
+                <div className="flex items-center gap-1">
                     {!user && (
-                        <Link href="/about" className="text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors hidden sm:block">
+                        <Link
+                            href="/about"
+                            className="text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors hidden sm:block px-3 py-1.5"
+                        >
                             About
                         </Link>
                     )}
+
                     <button
                         onClick={toggleTheme}
-                        className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                        className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
                         aria-label="Toggle theme"
                     >
                         {mounted && resolvedTheme === "dark" ? (
-                            <Sun className="h-5 w-5" />
+                            <Sun className="h-4 w-4" />
                         ) : (
-                            <Moon className="h-5 w-5" />
+                            <Moon className="h-4 w-4" />
                         )}
                     </button>
 
                     {isJournal && !isCreate && user && (
                         <Link
                             href="/create"
-                            className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-zinc-800 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-all active:scale-95"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 transition-all active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 ml-1"
                         >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline">New journal</span>
+                            <span className="sm:hidden">New</span>
                         </Link>
                     )}
 
                     {user && (
                         <Link
                             href="/settings"
-                            className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            className={cn(
+                                "p-2 rounded-lg transition-colors",
+                                pathname === "/settings"
+                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
+                                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            )}
                             aria-label="Settings"
                         >
-                            <Settings className="h-5 w-5" />
+                            <Settings className="h-4 w-4" />
                         </Link>
                     )}
 
                     {user && (
                         <button
                             onClick={logout}
-                            className="text-xs font-semibold text-zinc-500 hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-400 ml-1 sm:ml-2 transition-colors p-2 hidden sm:block"
+                            className="hidden sm:block p-2 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            aria-label="Log out"
+                            title="Log out"
                         >
-                            Logout
+                            <LogOut className="h-4 w-4" />
                         </button>
                     )}
                 </div>
             </div>
 
+            {/* Mobile nav strip */}
             {user && (
-                <nav className="flex sm:hidden items-center gap-6 px-4 pb-2 text-sm font-medium overflow-x-auto">
-                    {NAV_ITEMS.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                "pb-2 border-b-2 transition-colors shrink-0",
-                                navActive(item)
-                                    ? "border-zinc-900 text-zinc-900 dark:border-white dark:text-zinc-50"
-                                    : "border-transparent text-zinc-500 dark:text-zinc-400"
-                            )}
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
+                <nav className="flex sm:hidden items-center gap-1 px-4 pb-2 overflow-x-auto">
+                    {NAV_ITEMS.map((item) => {
+                        const active = navActive(item);
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    "shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                                    active
+                                        ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
+                                        : "text-zinc-500 dark:text-zinc-400"
+                                )}
+                            >
+                                {item.label}
+                            </Link>
+                        );
+                    })}
                 </nav>
             )}
         </header>

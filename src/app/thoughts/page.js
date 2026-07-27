@@ -6,7 +6,8 @@ import ThoughtCard from "@/components/thoughts/ThoughtCard";
 import ThoughtPreview from "@/components/thoughts/ThoughtPreview";
 import { useThoughts } from "@/lib/ThoughtsContext";
 import { AnimatePresence, motion } from "framer-motion";
-import { Trash2, CheckSquare, X, Loader2 } from "lucide-react";
+import { Trash2, CheckSquare, X, Loader2, StickyNote } from "lucide-react";
+import { notify } from "@/lib/notify";
 
 export default function ThoughtsPage() {
     const { thoughts, loading, deleteThoughts } = useThoughts();
@@ -34,7 +35,10 @@ export default function ThoughtsPage() {
         setIsDeleting(true);
         try {
             await deleteThoughts(selectedIds);
+            notify.success(`${selectedIds.length} note${selectedIds.length > 1 ? "s" : ""} deleted`);
             setSelectedIds([]);
+        } catch (err) {
+            notify.error("Failed to delete notes");
         } finally {
             setIsDeleting(false);
         }
@@ -120,15 +124,19 @@ export default function ThoughtsPage() {
                 )}
 
                 {loading && (
-                    <div className="flex flex-col items-center justify-center gap-3 mt-20 text-zinc-500 dark:text-zinc-400 font-medium">
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                        <p>Loading thoughts…</p>
+                    <div className="flex flex-col items-center justify-center gap-3 mt-20 text-zinc-400">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <p className="text-sm">Loading notes…</p>
                     </div>
                 )}
 
                 {!loading && thoughts.length === 0 && (
-                    <div className="text-center mt-20 text-zinc-500 dark:text-zinc-400 font-medium">
-                        Take a moment to jot down a thought.
+                    <div className="flex flex-col items-center justify-center gap-3 mt-24 text-center">
+                        <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                            <StickyNote className="w-6 h-6 text-zinc-400" />
+                        </div>
+                        <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">No notes yet</p>
+                        <p className="text-xs text-zinc-400 max-w-[200px]">Start capturing your thoughts above.</p>
                     </div>
                 )}
             </div>

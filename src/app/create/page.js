@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useJournal } from "@/lib/JournalContext";
 import JournalCreateForm from "@/components/journal/JournalCreateForm";
+import { notify } from "@/lib/notify";
 
 export default function CreateJournalPage() {
     const router = useRouter();
@@ -13,8 +14,14 @@ export default function CreateJournalPage() {
     };
 
     const handleSubmit = async (data) => {
-        await handleCreateSubmit(data);
-        router.push("/");
+        try {
+            await handleCreateSubmit(data);
+            notify.success("Journal saved");
+            router.push("/");
+        } catch (err) {
+            notify.error("Failed to save journal");
+            throw err; // re-throw so the form's isSubmitting resets
+        }
     };
 
     return (

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTasks } from "@/lib/TasksContext";
+import { notify } from "@/lib/notify";
 import { Plus, Loader2, ChevronDown, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fromDatetimeLocalValue } from "@/lib/taskUtils";
@@ -39,14 +40,20 @@ export default function TaskInput() {
 
         try {
             setIsSubmitting(true);
-            await addTask({
-                title: title.trim(),
-                description: description.trim() || null,
-                priority,
-                due_date: fromDatetimeLocalValue(dueDate),
-                // Only send reminder_at if explicitly set; backend will fall back to due_date otherwise
-                reminder_at: reminderAt ? fromDatetimeLocalValue(reminderAt) : null,
-            });
+            await notify.promise(
+                addTask({
+                    title: title.trim(),
+                    description: description.trim() || null,
+                    priority,
+                    due_date: fromDatetimeLocalValue(dueDate),
+                    reminder_at: reminderAt ? fromDatetimeLocalValue(reminderAt) : null,
+                }),
+                {
+                    loading: "Adding task…",
+                    success: "Task added!",
+                    error: "Failed to add task",
+                }
+            );
             reset();
         } catch (err) {
             console.error(err);
@@ -73,7 +80,7 @@ export default function TaskInput() {
                 <div className="flex items-center gap-2 px-4 py-3">
                     <input
                         type="text"
-                        placeholder="Add a task..."
+                        placeholder="Add a task…"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         onFocus={() => setIsExpanded(true)}

@@ -62,13 +62,23 @@ export default function RootLayout({ children }) {
     >
       <body className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Toaster richColors position="top-center" />
+          <Toaster
+            richColors
+            closeButton
+            position="bottom-left"
+            duration={4000}
+            toastOptions={{
+              classNames: {
+                toast: "font-sans text-sm rounded-xl shadow-lg border",
+              },
+            }}
+          />
           <AuthProvider>
             <ThoughtsProvider>
               <TasksProvider>
                 <JournalProvider>
                   <Header />
-                  <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6 sm:px-6">
+                  <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-6 sm:px-6">
                     {children}
                   </main>
                 </JournalProvider>

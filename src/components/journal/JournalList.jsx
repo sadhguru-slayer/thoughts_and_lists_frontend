@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { formatJournalListDate } from "@/lib/formatDate";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, BookOpen } from "lucide-react";
 
 const container = {
   hidden: { opacity: 0 },
@@ -24,16 +24,23 @@ export default function JournalList({ journals }) {
   if (journals.length === 0) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/50 px-6 py-16 text-center shadow-inner dark:border-zinc-800 dark:bg-zinc-900/30"
+        className="flex flex-col items-center justify-center gap-3 py-20 text-center"
       >
-        <p className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-          No entries yet
+        <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+          <BookOpen className="w-7 h-7 text-zinc-400" />
+        </div>
+        <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">No entries yet</p>
+        <p className="text-xs text-zinc-400 max-w-[220px]">
+          Start your first journal entry — every great habit begins somewhere.
         </p>
-        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-          Start writing your first journal entry by clicking the "New journal" button.
-        </p>
+        <Link
+          href="/create"
+          className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold px-4 py-2.5 transition-all active:scale-95 hover:opacity-90"
+        >
+          Write first entry
+        </Link>
       </motion.div>
     );
   }

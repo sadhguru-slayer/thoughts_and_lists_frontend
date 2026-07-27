@@ -4,6 +4,7 @@ import { formatJournalDetailDate } from "@/lib/formatDate";
 import { motion } from "framer-motion";
 import { ArrowLeft, Pencil, Save, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { notify } from "@/lib/notify";
 
 function FieldReadonly({ field }) {
   const isCheckbox = field.field_type === "checkbox";
@@ -105,7 +106,10 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
       typeof window !== "undefined" &&
       window.confirm("Delete this journal entry? This cannot be undone.")
     ) {
-      onDelete(detail.id);
+      notify.promise(
+        Promise.resolve(onDelete(detail.id)),
+        { loading: "Deleting…", success: "Journal deleted", error: "Failed to delete" }
+      );
     }
   };
 
@@ -144,7 +148,9 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
         sections: draft.sections,
       });
       setIsEditing(false);
+      notify.success("Journal updated");
     } catch (error) {
+      notify.error("Failed to save journal");
       console.error("Failed to save journal:", error);
     } finally {
       setIsSaving(false);
