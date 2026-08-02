@@ -32,8 +32,9 @@ export function AuthProvider({ children }) {
             const guestOnlyRoutes = ["/", "/login", "/register", "/forgot-password"];
             const publicRoutes = [...guestOnlyRoutes, "/about", "/privacy", "/terms"];
             
-            // console.log(guestOnlyRoutes,publicRoutes,pathname);
             if (!user && !publicRoutes.includes(pathname)) {
+                // Save the intended destination before redirecting to login
+                sessionStorage.setItem("returnTo", pathname + (window.location.search || ""));
                 router.replace("/login");
             }
             // Redirect authenticated users away from guest-only routes
@@ -57,7 +58,9 @@ export function AuthProvider({ children }) {
             Cookies.set("refresh_token", res.data.refresh_token, { expires: 7, path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
-        router.push("/dashboard");
+        const returnTo = sessionStorage.getItem("returnTo");
+        sessionStorage.removeItem("returnTo");
+        router.push(returnTo || "/dashboard");
     };
 
     const requestOtp = async (email) => {
@@ -71,7 +74,9 @@ export function AuthProvider({ children }) {
             Cookies.set("refresh_token", res.data.refresh_token, { expires: 7, path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
-        router.push("/dashboard");
+        const returnTo = sessionStorage.getItem("returnTo");
+        sessionStorage.removeItem("returnTo");
+        router.push(returnTo || "/dashboard");
     };
 
     const requestPasswordReset = async (email) => {
@@ -111,7 +116,9 @@ export function AuthProvider({ children }) {
             Cookies.set("refresh_token", res.data.refresh_token, { expires: 7, path: "/", sameSite: "Lax" });
         }
         setUser({ token: res.data.access_token });
-        router.push("/dashboard");
+        const returnTo = sessionStorage.getItem("returnTo");
+        sessionStorage.removeItem("returnTo");
+        router.push(returnTo || "/dashboard");
     };
 
     const logout = () => {

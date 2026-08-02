@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, Archive, Loader2, Save, Bell, CheckCircle2, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTasks } from "@/lib/TasksContext";
 import { notify } from "@/lib/notify";
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/taskUtils";
@@ -14,6 +15,7 @@ const fieldClass = "w-full text-sm rounded-xl border border-zinc-200 dark:border
 const labelClass = "text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5 block";
 
 export default function TaskDetailSheet({ task, onClose }) {
+    const router = useRouter();
     const { fetchTaskById, editTask, deleteTask, completeTask, uncompleteTask, archiveTask } = useTasks();
 
     const [fullTask, setFullTask] = useState(null);
@@ -28,11 +30,18 @@ export default function TaskDetailSheet({ task, onClose }) {
     const [dueDate, setDueDate] = useState("");
     const [reminderAt, setReminderAt] = useState("");
 
+    const handleClose = () => {
+        router.replace("/tasks", { scroll: false });
+        onClose();
+    };
+
+
     useEffect(() => {
-        const handleKey = (e) => { if (e.key === "Escape") onClose(); };
+        const handleKey = (e) => { if (e.key === "Escape") handleClose(); };
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
-    }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         document.body.style.overflow = "hidden";
@@ -82,7 +91,7 @@ export default function TaskDetailSheet({ task, onClose }) {
                 reminder_at: reminderAt ? fromDatetimeLocalValue(reminderAt) : null,
             });
             notify.success("Task updated");
-            onClose();
+            handleClose();
         } catch (err) {
             notify.error("Failed to save task");
             console.error(err);
@@ -95,7 +104,7 @@ export default function TaskDetailSheet({ task, onClose }) {
         try {
             await deleteTask(task.id);
             notify.success("Task deleted");
-            onClose();
+            handleClose();
         } catch (err) {
             notify.error("Failed to delete task");
         }
@@ -105,7 +114,7 @@ export default function TaskDetailSheet({ task, onClose }) {
         try {
             await archiveTask(task.id);
             notify.success("Task archived");
-            onClose();
+            handleClose();
         } catch (err) {
             notify.error("Failed to archive task");
         }
@@ -121,7 +130,7 @@ export default function TaskDetailSheet({ task, onClose }) {
                 await completeTask(task.id);
                 notify.success("Task completed! 🎉");
             }
-            onClose();
+            handleClose();
         } catch (err) {
             notify.error("Failed to update task status");
         }
@@ -138,7 +147,7 @@ export default function TaskDetailSheet({ task, onClose }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
                     />
                     <motion.div
@@ -154,12 +163,32 @@ export default function TaskDetailSheet({ task, onClose }) {
                             <div className="w-10 h-1 rounded-full bg-zinc-200 dark:bg-zinc-700" />
                         </div>
 
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-5 pt-2 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-                            <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Task details</h2>
+                    {/* Header */}
+                        <div className="flex items-start justify-between px-5 pt-2 pb-4 border-b border-zinc-100 dark:border-zinc-800 gap-3">
+                            <div className="min-w-0 flex-1">
+                                {loading ? (
+                                    <div className="h-6 w-40 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+                                ) : (
+                                    <>
+                                        <h2 className="text-base font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight leading-snug truncate">
+                                            {title || task.title}
+                                        </h2>
+                                        <span className={`mt-1 inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                            {
+                                                LOW: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+                                                MEDIUM: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+                                                HIGH: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+                                                URGENT: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+                                            }[priority] ?? "bg-zinc-100 text-zinc-500"
+                                        }`}>
+                                            {priority?.charAt(0) + priority?.slice(1).toLowerCase()}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
                             <button
-                                onClick={onClose}
-                                className="p-1.5 rounded-full text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                onClick={handleClose}
+                                className="p-1.5 rounded-full text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
                                 aria-label="Close"
                             >
                                 <X className="w-4 h-4" />

@@ -17,8 +17,11 @@ const NAV_ITEMS = [
 ];
 
 function isJournalActive(pathname) {
-    if (pathname === "/journals" || pathname === "/create") return true;
-    if (pathname.match(/^\/\d+/)) return true;
+    if (pathname === "/journals" || pathname === "/journals/write") return true;
+    if (pathname.match(/^\/journals\/\d+/)) return true;
+    // Legacy paths still count as active during redirect
+    if (pathname === "/create") return true;
+    if (pathname.match(/^\/\d+$/)) return true;
     return false;
 }
 
@@ -38,7 +41,7 @@ export default function Header() {
 
     const isThoughts = pathname.startsWith("/thoughts");
     const isTasks = pathname.startsWith("/tasks");
-    const isCreate = pathname === "/create";
+    const isCreate = pathname === "/journals/write" || pathname === "/create";
     const isJournal = isJournalActive(pathname);
 
     const navActive = (item) => {
@@ -121,7 +124,7 @@ export default function Header() {
 
                     {isJournal && !isCreate && user && (
                         <Link
-                            href="/create"
+                            href="/journals/write"
                             className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 transition-all active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 ml-1"
                         >
                             <Plus className="h-3.5 w-3.5" />

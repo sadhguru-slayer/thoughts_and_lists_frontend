@@ -36,7 +36,7 @@ export default function JournalList({ journals }) {
           Start your first journal entry — every great habit begins somewhere.
         </p>
         <Link
-          href="/create"
+          href="/journals/write"
           className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold px-4 py-2.5 transition-all active:scale-95 hover:opacity-90"
         >
           Write first entry
@@ -68,7 +68,7 @@ export default function JournalList({ journals }) {
         return (
           <motion.li key={j.id} variants={item} layout>
             <Link
-              href={`/${j.id}`}
+              href={`/journals/${j.id}`}
               className="group flex w-full items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-zinc-300 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
             >
               <div className="min-w-0 flex-1">

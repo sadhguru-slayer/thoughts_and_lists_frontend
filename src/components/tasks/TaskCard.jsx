@@ -2,10 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Calendar, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { PRIORITY_CONFIG, STATUS_CONFIG, formatTaskDate, isOverdue } from "@/lib/taskUtils";
 
 export default function TaskCard({ task, onOpen, onToggleComplete }) {
+    const router = useRouter();
     const completed = task.completed || task.status === "COMPLETED";
     const overdue = isOverdue(task);
     const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.MEDIUM;
@@ -16,21 +18,45 @@ export default function TaskCard({ task, onOpen, onToggleComplete }) {
         onToggleComplete(task);
     };
 
+    const handleOpen = () => {
+        router.push(`/tasks?task=${task.id}`, { scroll: false });
+        onOpen(task);
+    };
+
+    // Priority accent bar colours
+    const accentColor = {
+        LOW: "bg-sky-400",
+        MEDIUM: "bg-amber-400",
+        HIGH: "bg-orange-500",
+        URGENT: "bg-red-500",
+    }[task.priority] ?? "bg-zinc-300";
+
     return (
         <motion.div
             layout
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98 }}
-            onClick={() => onOpen(task)}
+            onClick={handleOpen}
             className={cn(
-                "group flex items-start gap-3 rounded-2xl border p-4 shadow-sm transition-all cursor-pointer",
+                "group flex items-start gap-3 rounded-2xl border p-4 shadow-sm transition-all cursor-pointer overflow-hidden relative",
                 completed
                     ? "border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/50 opacity-75"
                     : "border-zinc-200 bg-white hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900",
                 overdue && !completed && "border-red-200 dark:border-red-900/50"
             )}
         >
+            {/* Priority accent bar */}
+            {!completed && (
+                <span
+                    className={cn(
+                        "absolute left-0 top-3 bottom-3 w-1 rounded-r-full opacity-80",
+                        accentColor
+                    )}
+                    aria-hidden
+                />
+            )}
+
             <button
                 type="button"
                 onClick={handleToggle}
@@ -45,11 +71,11 @@ export default function TaskCard({ task, onOpen, onToggleComplete }) {
                 {completed && <Check className="w-3 h-3" strokeWidth={3} />}
             </button>
 
-            <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="flex-1 min-w-0 space-y-1.5 pl-1">
                 <div className="flex items-start justify-between gap-2">
                     <h3
                         className={cn(
-                            "text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug",
+                            "text-[15px] font-bold text-zinc-900 dark:text-zinc-100 leading-snug tracking-tight",
                             completed && "line-through text-zinc-400 dark:text-zinc-500"
                         )}
                     >

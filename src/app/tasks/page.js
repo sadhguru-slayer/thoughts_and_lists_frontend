@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader2, Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import TaskInput from "@/components/tasks/TaskInput";
 import TaskCard from "@/components/tasks/TaskCard";
 import TaskFilters from "@/components/tasks/TaskFilters";
 import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
 import { useTasks } from "@/lib/TasksContext";
 
-export default function TasksPage() {
+function TasksPageInner() {
     const {
         tasks,
         loading,
@@ -17,10 +18,32 @@ export default function TasksPage() {
         updateFilters,
         completeTask,
         uncompleteTask,
+        fetchTaskById,
     } = useTasks();
 
     const [selectedTask, setSelectedTask] = useState(null);
     const [searchInput, setSearchInput] = useState(filters.search || "");
+    const searchParams = useSearchParams();
+
+    // Auto-open task from URL ?task=id
+    useEffect(() => {
+        const taskId = searchParams.get("task");
+        if (!taskId) {
+            setSelectedTask(null);
+            return;
+        }
+        // Try to find in already-loaded tasks first
+        const found = tasks.find((t) => String(t.id) === String(taskId));
+        if (found) {
+            setSelectedTask(found);
+        } else if (!loading) {
+            // Fetch the task directly if not in the current filtered list
+            fetchTaskById(Number(taskId))
+                .then((data) => { if (data) setSelectedTask(data); })
+                .catch(() => {}); // silently fail for invalid IDs
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, tasks.length, loading]);
 
     const handleOpen = useCallback((task) => {
         setSelectedTask(task);
@@ -107,3 +130,13 @@ export default function TasksPage() {
         </>
     );
 }
+
+// Wrap in Suspense because useSearchParams requires it in Next.js App Router
+export default function TasksPage() {
+    return (
+        <Suspense>
+            <TasksPageInner />
+        </Suspense>
+    );
+}
+
