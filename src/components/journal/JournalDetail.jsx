@@ -145,7 +145,14 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
       await onSave(detail.id, {
         date: draft.date ? `${draft.date}:00` : null,
         content: draft.content,
-        sections: draft.sections,
+        sections: draft.sections.map((s) => ({
+            uuid: s.id,
+            name: s.name,
+            field_values: s.field_values.map((fv) => ({
+                uuid: fv.id,
+                value: fv.value
+            }))
+        })),
       });
       setIsEditing(false);
       notify.success("Journal updated");

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 function newClientKey() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -82,6 +83,7 @@ function initialDraftSectionsFromLatest(latestStructure, templates) {
 const FIELD_TYPES = [
   { value: "text", label: "Short text" },
   { value: "textarea", label: "Long text" },
+  { value: "richtext", label: "Rich text (editor)" },
   { value: "checkbox", label: "Checkbox" },
 ];
 
@@ -134,7 +136,15 @@ function CustomFieldRow({ fieldIndex, fv, onChange, onRemove, disabled }) {
           <X className="w-4 h-4" />
         </button>
       </div>
-      {fv.field_type === "textarea" ? (
+      {fv.field_type === "richtext" ? (
+        <RichTextEditor
+          content={fv.value ?? ""}
+          onChange={(html) => onChange(fieldIndex, html)}
+          disabled={disabled}
+          placeholder={`Write ${fv.label}…`}
+          minHeight="120px"
+        />
+      ) : fv.field_type === "textarea" ? (
         <textarea
           rows={3}
           disabled={disabled}
@@ -316,7 +326,7 @@ export default function JournalCreateForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const trimmedContent = content.trim();
+    const trimmedContent = content.replace(/<[^>]*>/g, "").trim() ? content : "";
     if (!trimmedContent && draftSections.length === 0) return;
     if (!ready || !localDatetime) return;
     const date = new Date(localDatetime);
@@ -347,10 +357,13 @@ export default function JournalCreateForm({
     }
   };
 
+  // Strip HTML tags to check if the rich editor actually has content
+  const hasRichContent = content.replace(/<[^>]*>/g, "").trim().length > 0;
+
   const canSubmit =
     ready &&
     !!localDatetime &&
-    (content.trim().length > 0 || draftSections.length > 0);
+    (hasRichContent || draftSections.length > 0);
 
   return (
     <motion.form
@@ -389,17 +402,15 @@ export default function JournalCreateForm({
         </div>
 
         <div>
-          <label htmlFor="journal-content" className={labelClass}>
+          <label className={labelClass}>
             Entry <span className="lowercase font-medium tracking-normal ml-1">(Optional if adding sections)</span>
           </label>
-          <textarea
-            id="journal-content"
-            rows={6}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+          <RichTextEditor
+            content={content}
+            onChange={setContent}
             disabled={isSubmitting}
             placeholder="What's on your mind?"
-            className={cn(inputClass, "resize-y placeholder:text-zinc-400 dark:placeholder:text-zinc-500 font-medium leading-relaxed")}
+            minHeight="180px"
           />
         </div>
       </div>

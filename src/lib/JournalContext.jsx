@@ -18,7 +18,13 @@ export function JournalProvider({ children }) {
     const fetchLatestStructure = async () => {
         try {
             const res = await api.get("/api/v1/journal/structure/latest");
-            if (res.data) setLatestStructure(res.data);
+            if (res.data) {
+                const mappedSections = (res.data.sections || []).map(s => ({
+                    ...s,
+                    template_id: s.template_uuid || s.template_id
+                }));
+                setLatestStructure({ sections: mappedSections });
+            }
         } catch (err) {
             console.error("Failed to fetch latest structure:", err);
         }
@@ -43,7 +49,8 @@ export function JournalProvider({ children }) {
         try {
             setLoading(true);
             const res = await api.get("/api/v1/journals");
-            setJournals(res.data);
+            const mapped = res.data.map(j => ({ ...j, id: j.uuid || j.id }));
+            setJournals(mapped);
         } catch (err) {
             console.error("Failed to fetch journals:", err);
         } finally {
@@ -63,7 +70,14 @@ export function JournalProvider({ children }) {
     const fetchTemplates = async () => {
         try {
             const res = await api.get("/api/v1/templates");
-            setTemplates(res.data);
+            const mapped = res.data.map(t => {
+                const tmpl = { ...t, id: t.uuid || t.id };
+                if (tmpl.fields) {
+                    tmpl.fields = tmpl.fields.map(f => ({ ...f, id: f.uuid || f.id }));
+                }
+                return tmpl;
+            });
+            setTemplates(mapped);
         } catch (err) {
             console.error("Failed to fetch templates:", err);
         }
@@ -74,6 +88,16 @@ export function JournalProvider({ children }) {
             if (!forceRefresh && detailById[id]) return detailById[id];
             const res = await api.get(`/api/v1/journal/${id}`);
             const detail = res.data;
+            if (detail.uuid) detail.id = detail.uuid;
+            if (detail.sections) {
+                detail.sections = detail.sections.map(s => {
+                    const sec = { ...s, id: s.uuid || s.id, template_id: s.template_uuid || s.template_id };
+                    if (sec.field_values) {
+                        sec.field_values = sec.field_values.map(fv => ({ ...fv, id: fv.uuid || fv.id }));
+                    }
+                    return sec;
+                });
+            }
             console.log(detail)
             setDetailById((prev) => ({ ...prev, [id]: detail }));
             return detail;
@@ -90,19 +114,20 @@ export function JournalProvider({ children }) {
                 content: content || null,
                 sections: sections.map(s => ({
                     name: s.name,
-                    template_id: s.templateId,
+                    template_uuid: s.templateId,
                     reusable: s.reusable,
                     field_values: s.fieldValues.map(fv => ({
                         label: fv.label,
                         field_type: fv.field_type,
                         value: fv.value,
-                        field_id: fv.field_id
+                        field_uuid: fv.field_id
                     }))
                 }))
             };
 
             const res = await api.post("/api/v1/journal", payload);
             const newJournal = res.data;
+            if (newJournal.uuid) newJournal.id = newJournal.uuid;
             setJournals((prev) => [newJournal, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)));
             // Also fetch templates again in case they saved a reusable section
             fetchTemplates();

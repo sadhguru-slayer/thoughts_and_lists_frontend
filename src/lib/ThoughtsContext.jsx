@@ -16,7 +16,7 @@ function truncate(str, max) {
 
 function toThoughtSummary(thought) {
     return {
-        id: thought.id,
+        id: thought.uuid || thought.id,
         title: truncate(thought.title, TITLE_PREVIEW_MAX),
         content_preview: truncate(thought.content, CONTENT_PREVIEW_MAX),
         user_id: thought.user_id,
@@ -55,7 +55,11 @@ export function ThoughtsProvider({ children }) {
 
     const fetchThoughtById = useCallback(async (id) => {
         const res = await api.get(`/api/v1/thoughts/${id}`);
-        return res.data;
+        const data = res.data;
+        if (data.uuid) {
+            data.id = data.uuid;
+        }
+        return data;
     }, []);
 
     const addThought = useCallback(async ({ title, content }) => {
@@ -75,13 +79,14 @@ export function ThoughtsProvider({ children }) {
     const editThought = useCallback(async (id, { title, content }) => {
         try {
             const res = await api.patch(`/api/v1/thoughts/${id}`, {
-                id,
+                uuid: id,
                 title: (title || "").trim(),
                 content: (content || "").trim()
             });
             const updated = res.data.thought || res.data;
+            if (updated.uuid) updated.id = updated.uuid;
             setThoughts((prev) =>
-                prev.map((t) => (t.id === id ? toThoughtSummary(updated) : t))
+                prev.map((t) => (t.id === id || t.uuid === id ? toThoughtSummary(updated) : t))
             );
             return updated;
         } catch (err) {
@@ -101,8 +106,8 @@ export function ThoughtsProvider({ children }) {
 
     const deleteThoughts = useCallback(async (ids) => {
         try {
-            await api.post("/api/v1/thoughts/bulk-delete", { ids });
-            setThoughts((prev) => prev.filter((t) => !ids.includes(t.id)));
+            await api.post("/api/v1/thoughts/bulk-delete", { uuids: ids });
+            setThoughts((prev) => prev.filter((t) => !ids.includes(t.id) && !ids.includes(t.uuid)));
         } catch (err) {
             console.error("Failed to bulk delete thoughts:", err);
             throw err;

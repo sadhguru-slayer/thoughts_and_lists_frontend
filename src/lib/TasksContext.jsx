@@ -41,7 +41,8 @@ export function TasksProvider({ children }) {
             const res = await api.get("/api/v1/tasks", {
                 params: buildQueryParams(activeFilters),
             });
-            setTasks(res.data);
+            const mapped = res.data.map(t => ({ ...t, id: t.uuid || t.id }));
+            setTasks(mapped);
         } catch (err) {
             console.error("Failed to fetch tasks:", err);
         } finally {
@@ -61,7 +62,9 @@ export function TasksProvider({ children }) {
 
     const fetchTaskById = useCallback(async (id) => {
         const res = await api.get(`/api/v1/tasks/${id}`);
-        return res.data;
+        const data = res.data;
+        if (data.uuid) data.id = data.uuid;
+        return data;
     }, []);
 
     const addTask = useCallback(async (payload) => {
