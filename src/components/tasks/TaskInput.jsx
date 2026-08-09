@@ -77,7 +77,7 @@ export default function TaskInput() {
                 layout
                 onSubmit={handleSubmit}
                 className={cn(
-                    "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden transition-all",
+                    "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm transition-all",
                     isExpanded && "shadow-md ring-1 ring-zinc-200 dark:ring-zinc-700"
                 )}
             >
@@ -108,7 +108,7 @@ export default function TaskInput() {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="px-4 pb-3 space-y-3 border-t border-zinc-100 dark:border-zinc-800 pt-3"
+                            className="px-4 pb-3 space-y-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 overflow-visible"
                         >
                             <textarea
                                 placeholder="Description (optional)"
@@ -120,20 +120,21 @@ export default function TaskInput() {
                             />
 
                             <div className="flex flex-col gap-3">
-                                <div className="flex flex-wrap gap-2">
-                                    {/* Priority */}
+                                {/* Priority */}
+                                <div>
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1 block">Priority</label>
                                     <div className="relative">
                                         <select
                                             value={priority}
                                             onChange={(e) => setPriority(e.target.value)}
                                             disabled={isSubmitting}
-                                            className="appearance-none text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 pl-3 pr-8 py-2 text-zinc-700 dark:text-zinc-200 outline-none"
+                                            className="w-full appearance-none text-sm font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 pl-3 pr-8 py-2.5 text-zinc-800 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition-shadow disabled:opacity-50"
                                         >
                                             {PRIORITIES.map((p) => (
                                                 <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
                                             ))}
                                         </select>
-                                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
                                     </div>
                                 </div>
 

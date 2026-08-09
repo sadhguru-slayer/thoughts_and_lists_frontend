@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Clock, X, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -102,14 +103,33 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINS  = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
 function TimePicker({ hour, minute, onHour, onMin }) {
+    const hourRef = useRef(null);
+    const minRef  = useRef(null);
+
+    // Auto-scroll to selected value whenever picker mounts or selection changes
+    useEffect(() => {
+        if (hourRef.current) {
+            const el = hourRef.current.querySelector(`[data-h="${hour}"]`);
+            if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+    }, [hour]);
+
+    useEffect(() => {
+        if (minRef.current) {
+            const el = minRef.current.querySelector(`[data-m="${minute}"]`);
+            if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+    }, [minute]);
+
     return (
         <div className="flex gap-2 items-center justify-center mt-3 px-1">
             <div className="flex flex-col items-center gap-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Hr</span>
-                <div className="h-28 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700 space-y-0.5 pr-1">
+                <div ref={hourRef} className="h-28 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700 space-y-0.5 pr-1">
                     {HOURS.map(h => (
                         <button
                             key={h}
+                            data-h={h}
                             type="button"
                             onClick={() => onHour(h)}
                             className={`w-10 text-xs font-semibold rounded-lg py-1 transition-all ${
@@ -126,10 +146,11 @@ function TimePicker({ hour, minute, onHour, onMin }) {
             <span className="text-zinc-300 dark:text-zinc-600 font-bold">:</span>
             <div className="flex flex-col items-center gap-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Min</span>
-                <div className="h-28 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700 space-y-0.5 pr-1">
+                <div ref={minRef} className="h-28 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700 space-y-0.5 pr-1">
                     {MINS.map(m => (
                         <button
                             key={m}
+                            data-m={m}
                             type="button"
                             onClick={() => onMin(m)}
                             className={`w-10 text-xs font-semibold rounded-lg py-1 transition-all ${
@@ -150,7 +171,9 @@ function TimePicker({ hour, minute, onHour, onMin }) {
 // ── Main component ───────────────────────────────────────────────────────────
 export default function DateTimePicker({ value, onChange, placeholder = "Pick a date & time", disabled = false }) {
     const [open, setOpen] = useState(false);
-    const ref = useRef(null);
+    const ref       = useRef(null);
+    const popoverRef = useRef(null);
+    const [popoverStyle, setPopoverStyle] = useState({});
 
     const selected = value ? fromLocalISO(value) : null;
 
@@ -160,13 +183,44 @@ export default function DateTimePicker({ value, onChange, placeholder = "Pick a 
     const [hour,      setHour]      = useState(selected?.getHours()     ?? 9);
     const [minute,    setMinute]    = useState(selected?.getMinutes()   ?? 0);
 
+    // Compute fixed position relative to the trigger button
+    const computePosition = useCallback(() => {
+        if (!ref.current) return;
+        const rect = ref.current.getBoundingClientRect();
+        const popoverW = 288; // w-72
+        const spaceBelow = window.innerHeight - rect.bottom - 8;
+        const spaceAbove = rect.top - 8;
+        const openUpward = spaceBelow < 360 && spaceAbove > spaceBelow;
+
+        setPopoverStyle({
+            position: "fixed",
+            left: Math.min(rect.left, window.innerWidth - popoverW - 8),
+            top: openUpward ? undefined : rect.bottom + 6,
+            bottom: openUpward ? window.innerHeight - rect.top + 6 : undefined,
+            width: Math.max(rect.width, popoverW),
+            zIndex: 9999,
+        });
+    }, []);
+
     // Close on outside click
     useEffect(() => {
         if (!open) return;
-        function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+        computePosition();
+        function handler(e) {
+            if (
+                ref.current && !ref.current.contains(e.target) &&
+                popoverRef.current && !popoverRef.current.contains(e.target)
+            ) setOpen(false);
+        }
         document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, [open]);
+        window.addEventListener("resize", computePosition);
+        window.addEventListener("scroll", computePosition, true);
+        return () => {
+            document.removeEventListener("mousedown", handler);
+            window.removeEventListener("resize", computePosition);
+            window.removeEventListener("scroll", computePosition, true);
+        };
+    }, [open, computePosition]);
 
     // Sync state when value changes externally
     useEffect(() => {
@@ -253,16 +307,17 @@ export default function DateTimePicker({ value, onChange, placeholder = "Pick a 
                 {!selected && <Clock className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600 shrink-0" />}
             </button>
 
-            {/* Popover */}
+            {/* Popover — rendered in a portal so it escapes overflow:hidden parents */}
             <AnimatePresence>
-                {open && (
+                {open && typeof window !== "undefined" && createPortal(
                     <motion.div
+                        ref={popoverRef}
                         initial={{ opacity: 0, y: -6, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0,  scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.97 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute z-50 mt-2 w-72 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden"
-                        style={{ minWidth: "280px" }}
+                        className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden"
+                        style={popoverStyle}
                     >
                         {/* Quick picks */}
                         <div className="px-3 pt-3 pb-2 flex flex-wrap gap-1.5 border-b border-zinc-100 dark:border-zinc-800">
@@ -319,7 +374,8 @@ export default function DateTimePicker({ value, onChange, placeholder = "Pick a 
                                 </button>
                             </div>
                         )}
-                    </motion.div>
+                    </motion.div>,
+                    document.body
                 )}
             </AnimatePresence>
         </div>

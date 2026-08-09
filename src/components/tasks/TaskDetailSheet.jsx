@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Trash2, Archive, Loader2, Save, Bell, CheckCircle2, RotateCcw } from "lucide-react";
+import { X, Trash2, Archive, Loader2, Save, Bell, CheckCircle2, RotateCcw, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTasks } from "@/lib/TasksContext";
@@ -235,29 +235,35 @@ export default function TaskDetailSheet({ task, onClose }) {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className={labelClass}>Priority</label>
-                                            <select
-                                                value={priority}
-                                                onChange={(e) => setPriority(e.target.value)}
-                                                className={fieldClass}
-                                            >
-                                                {PRIORITIES.map((p) => (
-                                                    <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
-                                                ))}
-                                            </select>
+                                            <div className="relative">
+                                                <select
+                                                    value={priority}
+                                                    onChange={(e) => setPriority(e.target.value)}
+                                                    className={`${fieldClass} appearance-none pr-8`}
+                                                >
+                                                    {PRIORITIES.map((p) => (
+                                                        <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                                            </div>
                                         </div>
                                         <div>
                                             <label className={labelClass}>Status</label>
-                                            <select
-                                                value={status}
-                                                onChange={(e) => setStatus(e.target.value)}
-                                                className={fieldClass}
-                                            >
-                                                {STATUSES.map((s) => (
-                                                    <option key={s} value={s}>
-                                                        {s.replace("_", " ").charAt(0) + s.replace("_", " ").slice(1).toLowerCase()}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <div className="relative">
+                                                <select
+                                                    value={status}
+                                                    onChange={(e) => setStatus(e.target.value)}
+                                                    className={`${fieldClass} appearance-none pr-8`}
+                                                >
+                                                    {STATUSES.map((s) => (
+                                                        <option key={s} value={s}>
+                                                            {s.replace("_", " ").charAt(0) + s.replace("_", " ").slice(1).toLowerCase()}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                                            </div>
                                         </div>
                                     </div>
 
