@@ -6,7 +6,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTasks } from "@/lib/TasksContext";
 import { notify } from "@/lib/notify";
-import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/taskUtils";
+import DateTimePicker from "./DateTimePicker";
+import RecurrenceSelect from "./RecurrenceSelect";
+import { toDatetimeLocalValue } from "@/lib/taskUtils";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 const STATUSES = ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
@@ -29,6 +31,7 @@ export default function TaskDetailSheet({ task, onClose }) {
     const [status, setStatus] = useState("TODO");
     const [dueDate, setDueDate] = useState("");
     const [reminderAt, setReminderAt] = useState("");
+    const [recurrence, setRecurrence] = useState("NONE");
 
     const handleClose = () => {
         router.replace("/tasks", { scroll: false });
@@ -67,6 +70,7 @@ export default function TaskDetailSheet({ task, onClose }) {
                 const reminderVal = toDatetimeLocalValue(data.reminder_at);
                 const dueDateVal = toDatetimeLocalValue(data.due_date);
                 setReminderAt(reminderVal !== dueDateVal ? reminderVal : "");
+                setRecurrence(data.recurrence_interval ?? "NONE");
             })
             .catch(() => {
                 if (!cancelled) setError("Failed to load task.");
@@ -81,14 +85,15 @@ export default function TaskDetailSheet({ task, onClose }) {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const dueDateISO = fromDatetimeLocalValue(dueDate);
+            const dueDateISO = dueDate ? new Date(dueDate).toISOString() : null;
             await editTask(task.id, {
                 title: title.trim(),
                 description: description.trim() || null,
                 priority,
                 status,
                 due_date: dueDateISO,
-                reminder_at: reminderAt ? fromDatetimeLocalValue(reminderAt) : null,
+                reminder_at: reminderAt ? new Date(reminderAt).toISOString() : null,
+                recurrence_interval: recurrence,
             });
             notify.success("Task updated");
             handleClose();
@@ -256,27 +261,31 @@ export default function TaskDetailSheet({ task, onClose }) {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className={labelClass}>Due date</label>
-                                            <input
-                                                type="datetime-local"
-                                                value={dueDate}
-                                                onChange={(e) => setDueDate(e.target.value)}
-                                                className={`${fieldClass} dark:[color-scheme:dark]`}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className={`${labelClass} flex items-center gap-1`}>
-                                                <Bell className="w-3 h-3" /> Reminder
-                                            </label>
-                                            <input
-                                                type="datetime-local"
-                                                value={reminderAt}
-                                                onChange={(e) => setReminderAt(e.target.value)}
-                                                className={`${fieldClass} dark:[color-scheme:dark]`}
-                                            />
-                                        </div>
+                                    <div>
+                                        <label className={labelClass}>Due date</label>
+                                        <DateTimePicker
+                                            value={dueDate}
+                                            onChange={setDueDate}
+                                            placeholder="No due date"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={`${labelClass} flex items-center gap-1`}>
+                                            <Bell className="w-3 h-3" /> Reminder
+                                        </label>
+                                        <DateTimePicker
+                                            value={reminderAt}
+                                            onChange={setReminderAt}
+                                            placeholder="Defaults to due date"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={labelClass}>Repeat</label>
+                                        <RecurrenceSelect
+                                            value={recurrence}
+                                            onChange={setRecurrence}
+                                        />
                                     </div>
                                 </>
                             )}

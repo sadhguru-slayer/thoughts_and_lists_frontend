@@ -4,9 +4,10 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTasks } from "@/lib/TasksContext";
 import { notify } from "@/lib/notify";
-import { Plus, Loader2, ChevronDown, Bell } from "lucide-react";
+import { Plus, Loader2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fromDatetimeLocalValue } from "@/lib/taskUtils";
+import DateTimePicker from "./DateTimePicker";
+import RecurrenceSelect from "./RecurrenceSelect";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 
@@ -17,6 +18,7 @@ export default function TaskInput() {
     const [priority, setPriority] = useState("MEDIUM");
     const [dueDate, setDueDate] = useState("");
     const [reminderAt, setReminderAt] = useState("");
+    const [recurrence, setRecurrence] = useState("NONE");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { addTask } = useTasks();
@@ -27,6 +29,7 @@ export default function TaskInput() {
         setPriority("MEDIUM");
         setDueDate("");
         setReminderAt("");
+        setRecurrence("NONE");
         setIsExpanded(false);
     };
 
@@ -45,8 +48,9 @@ export default function TaskInput() {
                     title: title.trim(),
                     description: description.trim() || null,
                     priority,
-                    due_date: fromDatetimeLocalValue(dueDate),
-                    reminder_at: reminderAt ? fromDatetimeLocalValue(reminderAt) : null,
+                    due_date: dueDate ? new Date(dueDate).toISOString() : null,
+                    reminder_at: reminderAt ? new Date(reminderAt).toISOString() : null,
+                    recurrence_interval: recurrence,
                 }),
                 {
                     loading: "Adding task…",
@@ -60,7 +64,7 @@ export default function TaskInput() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [title, description, priority, dueDate, reminderAt, addTask]);
+    }, [title, description, priority, dueDate, reminderAt, recurrence, addTask]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -115,43 +119,53 @@ export default function TaskInput() {
                                 className="w-full text-sm bg-transparent border-none outline-none resize-none placeholder:text-zinc-400 text-zinc-700 dark:text-zinc-300"
                             />
 
-                            <div className="flex flex-wrap gap-3">
-                                <div className="relative">
-                                    <select
-                                        value={priority}
-                                        onChange={(e) => setPriority(e.target.value)}
-                                        disabled={isSubmitting}
-                                        className="appearance-none text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 pl-3 pr-8 py-2 text-zinc-700 dark:text-zinc-200 outline-none"
-                                    >
-                                        {PRIORITIES.map((p) => (
-                                            <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                            <div className="flex flex-col gap-3">
+                                <div className="flex flex-wrap gap-2">
+                                    {/* Priority */}
+                                    <div className="relative">
+                                        <select
+                                            value={priority}
+                                            onChange={(e) => setPriority(e.target.value)}
+                                            disabled={isSubmitting}
+                                            className="appearance-none text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 pl-3 pr-8 py-2 text-zinc-700 dark:text-zinc-200 outline-none"
+                                        >
+                                            {PRIORITIES.map((p) => (
+                                                <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                                    </div>
                                 </div>
 
+                                {/* Due date */}
                                 <div className="flex flex-col gap-1">
                                     <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Due date</label>
-                                    <input
-                                        type="datetime-local"
+                                    <DateTimePicker
                                         value={dueDate}
-                                        onChange={(e) => setDueDate(e.target.value)}
+                                        onChange={setDueDate}
+                                        placeholder="No due date"
                                         disabled={isSubmitting}
-                                        className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none dark:[color-scheme:dark]"
                                     />
                                 </div>
 
+                                {/* Reminder */}
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1">
-                                        <Bell className="w-3 h-3" /> Reminder
-                                        <span className="normal-case font-normal text-zinc-400">(defaults to due date)</span>
-                                    </label>
-                                    <input
-                                        type="datetime-local"
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Reminder</label>
+                                    <DateTimePicker
                                         value={reminderAt}
-                                        onChange={(e) => setReminderAt(e.target.value)}
+                                        onChange={setReminderAt}
+                                        placeholder="Defaults to due date"
                                         disabled={isSubmitting}
-                                        className="text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-200 outline-none dark:[color-scheme:dark]"
+                                    />
+                                </div>
+
+                                {/* Recurrence */}
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Repeat</label>
+                                    <RecurrenceSelect
+                                        value={recurrence}
+                                        onChange={setRecurrence}
+                                        disabled={isSubmitting}
                                     />
                                 </div>
                             </div>
