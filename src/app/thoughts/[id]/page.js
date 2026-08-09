@@ -41,7 +41,7 @@ export default function ThoughtEditPage() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await editThought(Number(id), { title, content });
+            await editThought(id, { title, content });
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
         } finally {

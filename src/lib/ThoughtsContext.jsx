@@ -18,7 +18,7 @@ function toThoughtSummary(thought) {
     return {
         id: thought.uuid || thought.id,
         title: truncate(thought.title, TITLE_PREVIEW_MAX),
-        content_preview: truncate(thought.content, CONTENT_PREVIEW_MAX),
+        content_preview: truncate(thought.content_preview || thought.content, CONTENT_PREVIEW_MAX),
         user_id: thought.user_id,
         created_at: thought.created_at,
         updated_at: thought.updated_at,
@@ -44,8 +44,8 @@ export function ThoughtsProvider({ children }) {
         try {
             setLoading(true);
             const res = await api.get("/api/v1/thoughts");
-            const sorted = res.data.sort((a, b) => b.id - a.id);
-            setThoughts(sorted);
+            const mapped = res.data.map(toThoughtSummary);
+            setThoughts(mapped);
         } catch (err) {
             console.error("Failed to fetch thoughts:", err);
         } finally {
