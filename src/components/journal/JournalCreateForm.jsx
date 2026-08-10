@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import RichTextEditor from "@/components/ui/RichTextEditor";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function newClientKey() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -186,18 +187,18 @@ function AddCustomFields({ sectionKey, onAddField, disabled }) {
           />
         </div>
         <div className="w-full sm:w-40 shrink-0">
-          <select
-            disabled={disabled}
-            value={newType}
-            onChange={(e) => setNewType(e.target.value)}
-            className={inputClass}
-          >
-            {FIELD_TYPES.map((ft) => (
-              <option key={ft.value} value={ft.value}>
-                {ft.label}
-              </option>
-            ))}
-          </select>
+          <Select disabled={disabled} value={newType} onValueChange={setNewType}>
+            <SelectTrigger className={cn(inputClass, "h-auto py-3")}>
+              <SelectValue placeholder="Field Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {FIELD_TYPES.map((ft) => (
+                <SelectItem key={ft.value} value={ft.value}>
+                  {ft.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <button
           type="button"
@@ -423,19 +424,22 @@ export default function JournalCreateForm({
           <div className="flex flex-wrap items-center gap-3">
             {templates.length > 0 && (
               <div className="flex items-center bg-white/50 dark:bg-zinc-900/50 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                <select
+                <Select
                   value={selectedTemplateId}
-                  onChange={(e) => setSelectedTemplateId(e.target.value)}
+                  onValueChange={setSelectedTemplateId}
                   disabled={isSubmitting}
-                  className="bg-transparent text-sm font-medium border-none outline-none dark:text-zinc-200 px-3 py-1 cursor-pointer"
                 >
-                  <option value="">Add from template…</option>
-                  {templates.map((t) => (
-                    <option key={t.id} value={String(t.id)}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-48 bg-transparent text-sm font-medium border-none outline-none dark:text-zinc-200 px-3 py-1 cursor-pointer focus:ring-0">
+                    <SelectValue placeholder="Add from template…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <button
                   type="button"
                   onClick={addFromTemplate}
@@ -509,7 +513,7 @@ export default function JournalCreateForm({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   key={sec.clientKey}
-                  className="group relative rounded-3xl border border-zinc-200 bg-white/60 p-6 shadow-sm backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className="group relative rounded-3xl border border-zinc-200 bg-white/60 p-6 shadow-sm backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/50 overflow-hidden"
                 >
                   <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
                     <div className="flex-1 space-y-2 w-full">

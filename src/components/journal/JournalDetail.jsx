@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Pencil, Save, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { notify } from "@/lib/notify";
+import RichTextEditor, { RichTextReadonly } from "@/components/ui/RichTextEditor";
 
 function FieldReadonly({ field }) {
   const isCheckbox = field.field_type === "checkbox";
@@ -41,6 +42,17 @@ function FieldReadonly({ field }) {
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-800 dark:text-zinc-200 bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800">
           {field.value ?? "—"}
         </p>
+      </div>
+    );
+  }
+
+  if (field.field_type === "richtext") {
+    return (
+      <div className="space-y-2 py-2">
+        <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {field.label}
+        </p>
+        <RichTextReadonly html={field.value} className="bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800" />
       </div>
     );
   }
@@ -250,16 +262,13 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
             Content
           </h3>
           {isEditing ? (
-            <textarea
-              rows={6}
-              value={draft.content}
-              onChange={(e) => setDraft((prev) => ({ ...prev, content: e.target.value }))}
-              className="w-full resize-y rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"
+            <RichTextEditor
+              content={draft.content}
+              onChange={(val) => setDraft((prev) => ({ ...prev, content: val }))}
+              placeholder="Write your journal entry here..."
             />
           ) : (
-            <p className="whitespace-pre-wrap text-base leading-relaxed text-zinc-800 dark:text-zinc-200 font-medium">
-              {detail.content}
-            </p>
+            <RichTextReadonly html={detail.content} />
           )}
         </motion.section>
       )}
@@ -316,6 +325,18 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
                             value={currentValue}
                             onChange={(e) => updateFieldValue(section.id, fv.id, e.target.value)}
                             className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"
+                          />
+                        </div>
+                      );
+                    }
+                    if (fv.field_type === "richtext") {
+                      return (
+                        <div key={fv.id} className="space-y-2 py-2">
+                          <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{fv.label}</p>
+                          <RichTextEditor
+                            content={currentValue}
+                            onChange={(val) => updateFieldValue(section.id, fv.id, val)}
+                            placeholder={`Enter ${fv.label.toLowerCase()}...`}
                           />
                         </div>
                       );

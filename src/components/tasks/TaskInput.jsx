@@ -4,10 +4,11 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTasks } from "@/lib/TasksContext";
 import { notify } from "@/lib/notify";
-import { Plus, Loader2, ChevronDown } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DateTimePicker from "./DateTimePicker";
 import RecurrenceSelect from "./RecurrenceSelect";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 
@@ -123,19 +124,18 @@ export default function TaskInput() {
                                 {/* Priority */}
                                 <div>
                                     <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1 block">Priority</label>
-                                    <div className="relative">
-                                        <select
-                                            value={priority}
-                                            onChange={(e) => setPriority(e.target.value)}
-                                            disabled={isSubmitting}
-                                            className="w-full appearance-none text-sm font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 pl-3 pr-8 py-2.5 text-zinc-800 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition-shadow disabled:opacity-50"
-                                        >
+                                    <Select value={priority} onValueChange={setPriority} disabled={isSubmitting}>
+                                        <SelectTrigger className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 py-2.5 px-3 h-auto text-sm font-medium outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600">
+                                            <SelectValue placeholder="Priority" />
+                                        </SelectTrigger>
+                                        <SelectContent>
                                             {PRIORITIES.map((p) => (
-                                                <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+                                                <SelectItem key={p} value={p}>
+                                                    {p.charAt(0) + p.slice(1).toLowerCase()}
+                                                </SelectItem>
                                             ))}
-                                        </select>
-                                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                                    </div>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 {/* Due date */}

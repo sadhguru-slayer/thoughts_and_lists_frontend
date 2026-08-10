@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatJournalListDate } from "@/lib/formatDate";
 import { motion } from "framer-motion";
 import { ChevronRight, BookOpen } from "lucide-react";
+import { stripHtml } from "@/lib/utils";
 
 const container = {
   hidden: { opacity: 0 },
@@ -53,10 +54,11 @@ export default function JournalList({ journals }) {
       className="flex flex-col gap-4"
     >
       {journals.map((j) => {
-        const textPreview = j.content?.trim()
-          ? j.content.length > 120
-            ? `${j.content.slice(0, 120).trim()}…`
-            : j.content
+        const stripped = stripHtml(j.content);
+        const textPreview = stripped
+          ? stripped.length > 120
+            ? `${stripped.slice(0, 120).trim()}…`
+            : stripped
           : null;
         const sectionCount = j.sectionCount ?? 0;
         const preview =

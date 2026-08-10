@@ -8,6 +8,7 @@ import {
     LayoutDashboard, FileType, Activity, ArrowRight,
     StickyNote, BookOpen, ListTodo
 } from "lucide-react";
+import { stripHtml } from "@/lib/utils";
 
 // Animated arrow button component
 function ViewAllButton({ href }) {
@@ -151,7 +152,7 @@ export default function Dashboard() {
                                         {note.title || "Untitled Note"}
                                     </span>
                                     <span className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 line-clamp-1">
-                                        {note.content_preview?.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() || "No content…"}
+                                        {stripHtml(note.content_preview) || "No content…"}
                                     </span>
                                 </Link>
                             ))}
@@ -177,7 +178,7 @@ export default function Dashboard() {
                                             {journal.title || "Untitled"}
                                         </span>
                                         <span className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 line-clamp-1 block">
-                                            {journal.content_preview?.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() || "No content…"}
+                                            {stripHtml(journal.content_preview) || "No content…"}
                                         </span>
                                     </div>
                                     <span className="text-[11px] text-zinc-400 whitespace-nowrap mt-0.5 shrink-0">{journal.date}</span>

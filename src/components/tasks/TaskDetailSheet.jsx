@@ -9,6 +9,8 @@ import { notify } from "@/lib/notify";
 import DateTimePicker from "./DateTimePicker";
 import RecurrenceSelect from "./RecurrenceSelect";
 import { toDatetimeLocalValue } from "@/lib/taskUtils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 const STATUSES = ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
@@ -43,7 +45,7 @@ export default function TaskDetailSheet({ task, onClose }) {
         const handleKey = (e) => { if (e.key === "Escape") handleClose(); };
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -168,7 +170,7 @@ export default function TaskDetailSheet({ task, onClose }) {
                             <div className="w-10 h-1 rounded-full bg-zinc-200 dark:bg-zinc-700" />
                         </div>
 
-                    {/* Header */}
+                        {/* Header */}
                         <div className="flex items-start justify-between px-5 pt-2 pb-4 border-b border-zinc-100 dark:border-zinc-800 gap-3">
                             <div className="min-w-0 flex-1">
                                 {loading ? (
@@ -178,14 +180,13 @@ export default function TaskDetailSheet({ task, onClose }) {
                                         <h2 className="text-base font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight leading-snug truncate">
                                             {title || task.title}
                                         </h2>
-                                        <span className={`mt-1 inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                                            {
+                                        <span className={`mt-1 inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${{
                                                 LOW: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
                                                 MEDIUM: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
                                                 HIGH: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
                                                 URGENT: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
                                             }[priority] ?? "bg-zinc-100 text-zinc-500"
-                                        }`}>
+                                            }`}>
                                             {priority?.charAt(0) + priority?.slice(1).toLowerCase()}
                                         </span>
                                     </>
@@ -235,35 +236,31 @@ export default function TaskDetailSheet({ task, onClose }) {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className={labelClass}>Priority</label>
-                                            <div className="relative">
-                                                <select
-                                                    value={priority}
-                                                    onChange={(e) => setPriority(e.target.value)}
-                                                    className={`${fieldClass} appearance-none pr-8`}
-                                                >
+                                            <Select value={priority} onValueChange={setPriority}>
+                                                <SelectTrigger className={`${fieldClass} h-auto py-2`}>
+                                                    <SelectValue placeholder="Priority" />
+                                                </SelectTrigger>
+                                                <SelectContent>
                                                     {PRIORITIES.map((p) => (
-                                                        <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+                                                        <SelectItem key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</SelectItem>
                                                     ))}
-                                                </select>
-                                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                                            </div>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         <div>
                                             <label className={labelClass}>Status</label>
-                                            <div className="relative">
-                                                <select
-                                                    value={status}
-                                                    onChange={(e) => setStatus(e.target.value)}
-                                                    className={`${fieldClass} appearance-none pr-8`}
-                                                >
+                                            <Select value={status} onValueChange={setStatus}>
+                                                <SelectTrigger className={`${fieldClass} h-auto py-2`}>
+                                                    <SelectValue placeholder="Status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
                                                     {STATUSES.map((s) => (
-                                                        <option key={s} value={s}>
+                                                        <SelectItem key={s} value={s}>
                                                             {s.replace("_", " ").charAt(0) + s.replace("_", " ").slice(1).toLowerCase()}
-                                                        </option>
+                                                        </SelectItem>
                                                     ))}
-                                                </select>
-                                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                                            </div>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
 
