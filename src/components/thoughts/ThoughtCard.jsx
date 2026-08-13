@@ -56,17 +56,20 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
             onTouchEnd={cancelLongPress}
             onTouchMove={cancelLongPress}
             className={cn(
-                "group relative flex flex-col gap-2 rounded-2xl border p-4 shadow-sm transition-all cursor-pointer select-none",
+                "group relative flex flex-col gap-2.5 rounded-2xl border p-4 shadow-xs transition-all duration-200 cursor-pointer select-none overflow-hidden",
                 isSelected
-                    ? "border-blue-400 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-500 ring-2 ring-blue-300 dark:ring-blue-600"
-                    : "border-zinc-200 bg-white hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+                    ? "border-violet-500 bg-violet-50/60 dark:bg-violet-950/30 dark:border-violet-500 ring-2 ring-violet-400 dark:ring-violet-600"
+                    : "border-zinc-200/80 bg-white hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950/80 dark:hover:border-zinc-700"
             )}
         >
+            {/* Soft accent top line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500/20 via-sky-500/20 to-emerald-500/20 group-hover:from-violet-500 group-hover:via-sky-500 group-hover:to-emerald-500 transition-all duration-300" />
+
             {/* Checkbox */}
             <div
                 onClick={handleCheckbox}
                 className={cn(
-                    "absolute top-2.5 left-2.5 z-10 transition-all",
+                    "absolute top-3.5 left-3 z-10 transition-all",
                     isSelectMode
                         ? "opacity-100 pointer-events-auto"
                         : "opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
@@ -74,9 +77,9 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
             >
                 <div
                     className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shadow-xs",
                         isSelected
-                            ? "bg-blue-500 border-blue-500"
+                            ? "bg-violet-600 border-violet-600"
                             : "bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-600"
                     )}
                 >
@@ -89,14 +92,14 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
             </div>
 
             {/* Content */}
-            <div className={cn("flex flex-col gap-1 transition-all", isSelectMode ? "pl-7" : "pl-0")}>
+            <div className={cn("flex flex-col gap-1.5 transition-all pt-1", isSelectMode ? "pl-7" : "pl-0")}>
                 {thought.title && (
-                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight leading-snug break-words overflow-wrap-anywhere">
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50 tracking-tight leading-snug break-words overflow-wrap-anywhere">
                         {truncate(thought.title, TITLE_MAX)}
                     </h3>
                 )}
                 {(thought.content_preview || thought.content) && (
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed break-words overflow-wrap-anywhere">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed break-words overflow-wrap-anywhere">
                         {truncate(stripHtml(thought.content_preview || thought.content), CONTENT_MAX)}
                     </p>
                 )}

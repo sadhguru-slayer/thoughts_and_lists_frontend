@@ -1,19 +1,23 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import ThoughtInput from "@/components/thoughts/ThoughtInput";
 import ThoughtCard from "@/components/thoughts/ThoughtCard";
 import ThoughtPreview from "@/components/thoughts/ThoughtPreview";
+import Pagination from "@/components/ui/Pagination";
 import { useThoughts } from "@/lib/ThoughtsContext";
 import { AnimatePresence, motion } from "framer-motion";
-import { Trash2, CheckSquare, X, Loader2, StickyNote } from "lucide-react";
+import { Trash2, CheckSquare, X, Loader2, StickyNote, Search } from "lucide-react";
 import { notify } from "@/lib/notify";
 
-export default function ThoughtsPage() {
-    const { thoughts, loading, deleteThoughts } = useThoughts();
+function ThoughtsPageInner() {
+    const { thoughts, loading, deleteThoughts, fetchThoughtById, page, perPage, pagination, changePage, searchQuery, handleSearch } = useThoughts();
     const [selectedIds, setSelectedIds] = useState([]);
     const [previewThought, setPreviewThought] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
     const isSelectMode = selectedIds.length > 0;
 
@@ -46,13 +50,36 @@ export default function ThoughtsPage() {
 
     const handleCancelSelect = () => setSelectedIds([]);
 
+    // Sync preview with URL param: ?thought=<uuid>
+    useEffect(() => {
+        const thoughtId = searchParams.get("thought");
+        if (!thoughtId) {
+            setPreviewThought(null);
+            return;
+        }
+        const found = thoughts.find((t) => String(t.id) === String(thoughtId));
+        if (found) {
+            setPreviewThought(found);
+        } else if (!loading) {
+            fetchThoughtById(thoughtId)
+                .then((data) => { if (data) setPreviewThought(data); })
+                .catch(() => {});
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, thoughts.length, loading]);
+
     const handleOpen = useCallback((thought) => {
-        setPreviewThought(thought);
-    }, []);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("thought", thought.id);
+        router.push(`?${params.toString()}`, { scroll: false });
+    }, [router, searchParams]);
 
     const handleClosePreview = useCallback(() => {
-        setPreviewThought(null);
-    }, []);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("thought");
+        const query = params.toString();
+        router.push(query ? `?${query}` : "?", { scroll: false });
+    }, [router, searchParams]);
 
     const handleEnterSelectMode = useCallback((id) => {
         setSelectedIds([id]);
@@ -62,6 +89,18 @@ export default function ThoughtsPage() {
         <>
             <div className="w-full flex-1 pt-6 px-4 md:px-0 pb-28">
                 <ThoughtInput />
+
+                {/* Search Bar */}
+                <div className="mb-6 relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                        type="text"
+                        placeholder="Search notes..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all dark:text-zinc-200 placeholder:text-zinc-400"
+                    />
+                </div>
 
                 {/* Multi-select toolbar */}
                 <AnimatePresence>
@@ -107,20 +146,30 @@ export default function ThoughtsPage() {
 
                 {/* Notes grid */}
                 {!loading && (
-                    <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-                        {thoughts.map((thought) => (
-                            <div key={thought.id} className="break-inside-avoid">
-                                <ThoughtCard
-                                    thought={thought}
-                                    isSelected={selectedIds.includes(thought.id)}
-                                    onSelect={handleSelect}
-                                    onOpen={handleOpen}
-                                    isSelectMode={isSelectMode}
-                                    onEnterSelectMode={handleEnterSelectMode}
-                                />
-                            </div>
-                        ))}
-                    </div>
+                    <>
+                        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+                            {thoughts.map((thought) => (
+                                <div key={thought.id} className="break-inside-avoid">
+                                    <ThoughtCard
+                                        thought={thought}
+                                        isSelected={selectedIds.includes(thought.id)}
+                                        onSelect={handleSelect}
+                                        onOpen={handleOpen}
+                                        isSelectMode={isSelectMode}
+                                        onEnterSelectMode={handleEnterSelectMode}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <Pagination
+                            currentPage={page}
+                            totalPages={pagination?.totalPages ?? 1}
+                            totalItems={pagination?.total ?? thoughts.length}
+                            perPage={perPage}
+                            onPageChange={changePage}
+                            className="mt-6"
+                        />
+                    </>
                 )}
 
                 {loading && (
@@ -135,8 +184,12 @@ export default function ThoughtsPage() {
                         <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                             <StickyNote className="w-6 h-6 text-zinc-400" />
                         </div>
-                        <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">No notes yet</p>
-                        <p className="text-xs text-zinc-400 max-w-[200px]">Start capturing your thoughts above.</p>
+                        <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                            {searchQuery ? "No notes found" : "No notes yet"}
+                        </p>
+                        <p className="text-xs text-zinc-400 max-w-[200px]">
+                            {searchQuery ? "Try adjusting your search terms." : "Start capturing your thoughts above."}
+                        </p>
                     </div>
                 )}
             </div>
@@ -151,5 +204,14 @@ export default function ThoughtsPage() {
                 )}
             </AnimatePresence>
         </>
+    );
+}
+
+// Wrap in Suspense because useSearchParams requires it in Next.js App Router
+export default function ThoughtsPage() {
+    return (
+        <Suspense>
+            <ThoughtsPageInner />
+        </Suspense>
     );
 }

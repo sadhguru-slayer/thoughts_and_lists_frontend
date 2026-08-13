@@ -38,7 +38,7 @@ export default function JournalList({ journals }) {
         </p>
         <Link
           href="/journals/write"
-          className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold px-4 py-2.5 transition-all active:scale-95 hover:opacity-90"
+          className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold px-4 py-2.5 transition-all active:scale-95 hover:opacity-90 shadow-xs"
         >
           Write first entry
         </Link>
@@ -51,44 +51,62 @@ export default function JournalList({ journals }) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-3.5"
     >
       {journals.map((j) => {
         const stripped = stripHtml(j.content);
+        const wordCount = stripped ? stripped.split(/\s+/).filter(Boolean).length : 0;
+        const readTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
+
         const textPreview = stripped
-          ? stripped.length > 120
-            ? `${stripped.slice(0, 120).trim()}…`
+          ? stripped.length > 130
+            ? `${stripped.slice(0, 130).trim()}…`
             : stripped
           : null;
         const sectionCount = j.sectionCount ?? 0;
         const preview =
           textPreview ||
           (sectionCount > 0
-            ? `${sectionCount} section${sectionCount === 1 ? "" : "s"}`
-            : "Empty entry text");
+            ? `${sectionCount} structured section${sectionCount === 1 ? "" : "s"}`
+            : "Empty entry");
 
         return (
           <motion.li key={j.id} variants={item} layout>
             <Link
               href={`/journals/${j.id}`}
-              className="group flex w-full items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-zinc-300 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+              className="group relative flex w-full items-center gap-4 rounded-2xl border border-zinc-200/80 bg-white p-5 text-left shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950/80 dark:hover:border-zinc-700 overflow-hidden"
             >
-              <div className="min-w-0 flex-1">
-                <time
-                  dateTime={j.date}
-                  className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400"
-                >
-                  {formatJournalListDate(j.date)}
-                </time>
-                <p className="mt-2 line-clamp-2 leading-relaxed text-zinc-800 dark:text-zinc-200 font-medium">
+              {/* Left accent bar */}
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-500 to-indigo-500 opacity-60 group-hover:opacity-100 transition-opacity" />
+
+              <div className="min-w-0 flex-1 pl-1">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <time
+                    dateTime={j.date}
+                    className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
+                  >
+                    {formatJournalListDate(j.date)}
+                  </time>
+                  {sectionCount > 0 && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                      {sectionCount} {sectionCount === 1 ? "Section" : "Sections"}
+                    </span>
+                  )}
+                  {wordCount > 0 && (
+                    <span className="text-[10px] font-semibold text-zinc-400">
+                      • {readTimeMinutes} min read
+                    </span>
+                  )}
+                </div>
+                <p className="line-clamp-2 leading-relaxed text-sm text-zinc-800 dark:text-zinc-200 font-medium">
                   {preview}
                 </p>
               </div>
               <div
-                className="shrink-0 rounded-full p-2 bg-zinc-50 dark:bg-zinc-800 text-zinc-400 transition-all group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-900 shadow-sm"
+                className="shrink-0 rounded-xl p-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 transition-all group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-900 shadow-xs"
                 aria-hidden
               >
-                <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+                <ChevronRight className="w-4 h-4 stroke-[2.5]" />
               </div>
             </Link>
           </motion.li>

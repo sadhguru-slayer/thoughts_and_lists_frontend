@@ -176,21 +176,27 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
     }
   };
 
+  // Calculate word count
+  const wordCount = useMemo(() => {
+    const raw = detail.content ? detail.content.replace(/<[^>]*>?/gm, " ").trim() : "";
+    return raw ? raw.split(/\s+/).filter(Boolean).length : 0;
+  }, [detail.content]);
+
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-6"
+      className="space-y-6 pb-20"
     >
       <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 active:scale-95"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200/80 bg-white/80 backdrop-blur-md px-4 py-2 text-sm font-semibold text-zinc-800 shadow-xs transition hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-100 dark:hover:bg-zinc-900 active:scale-95"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Back to list
         </button>
         <div className="flex items-center gap-2">
           {isEditing ? (
@@ -199,7 +205,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
                 type="button"
                 onClick={cancelEditing}
                 disabled={isSaving}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
               >
                 <X className="w-4 h-4" />
                 Cancel
@@ -208,17 +214,17 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-sm font-bold text-white shadow-xs transition hover:bg-emerald-500 active:scale-95 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {isSaving ? "Saving..." : "Save"}
+                {isSaving ? "Saving..." : "Save Changes"}
               </button>
             </>
           ) : (
             <button
               type="button"
               onClick={startEditing}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 active:scale-95"
             >
               <Pencil className="w-4 h-4" />
               Edit
@@ -227,7 +233,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
           <button
             type="button"
             onClick={handleDelete}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60 active:scale-95"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200/80 bg-red-50/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50 active:scale-95"
           >
             <Trash2 className="w-4 h-4" />
             Delete
@@ -236,28 +242,35 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
       </motion.div>
 
       <motion.header variants={itemVariants} className="space-y-2 py-2">
-        {isEditing ? (
-          <input
-            type="datetime-local"
-            value={draft.date}
-            onChange={(e) => setDraft((prev) => ({ ...prev, date: e.target.value }))}
-            className="max-w-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:[color-scheme:dark]"
-          />
-        ) : (
-          <time
-            dateTime={detail.date}
-            className="text-sm font-bold tracking-widest uppercase text-zinc-500 dark:text-zinc-400"
-          >
-            {formatJournalDetailDate(detail.date)}
-          </time>
-        )}
+        <div className="flex items-center gap-3">
+          {isEditing ? (
+            <input
+              type="datetime-local"
+              value={draft.date}
+              onChange={(e) => setDraft((prev) => ({ ...prev, date: e.target.value }))}
+              className="max-w-xs rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:[color-scheme:dark]"
+            />
+          ) : (
+            <time
+              dateTime={detail.date}
+              className="text-xs font-bold tracking-wider uppercase text-zinc-500 dark:text-zinc-400"
+            >
+              {formatJournalDetailDate(detail.date)}
+            </time>
+          )}
+          {wordCount > 0 && (
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
+              {wordCount} words
+            </span>
+          )}
+        </div>
         <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
           Journal Entry
         </h2>
       </motion.header>
 
       {(detail.content || isEditing) && (
-        <motion.section variants={itemVariants} className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <motion.section variants={itemVariants} className="rounded-3xl border border-zinc-200/80 bg-white/80 backdrop-blur-md p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950/80">
           <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-4">
             Content
           </h3>
@@ -274,25 +287,25 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
       )}
 
       {detail.sections?.length > 0 && (
-        <motion.div variants={itemVariants} className="space-y-4 pt-4">
+        <motion.div variants={itemVariants} className="space-y-4 pt-2">
           <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-2">
-            Sections
+            Structured Sections
           </h3>
           <div className="grid gap-4">
             {detail.sections.map((section) => (
               <article
                 key={section.id}
-                className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+                className="rounded-3xl border border-zinc-200/80 bg-white/80 backdrop-blur-md p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950/80"
               >
                 {isEditing ? (
                   <input
                     type="text"
                     value={draft.sections.find((s) => s.id === section.id)?.name ?? ""}
                     onChange={(e) => updateSectionName(section.id, e.target.value)}
-                    className="mb-2 w-full border-b border-zinc-200 bg-transparent pb-2 text-lg font-bold text-zinc-900 outline-none dark:border-zinc-700 dark:text-zinc-50"
+                    className="mb-3 w-full border-b border-zinc-200 bg-transparent pb-2 text-lg font-bold text-zinc-900 outline-none dark:border-zinc-700 dark:text-zinc-50"
                   />
                 ) : (
-                  <h4 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 pb-2 border-b border-zinc-100 dark:border-zinc-800/50 mb-2">
+                  <h4 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 pb-2 border-b border-zinc-100 dark:border-zinc-800/50 mb-3">
                     {section.name}
                   </h4>
                 )}
@@ -324,7 +337,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
                             rows={3}
                             value={currentValue}
                             onChange={(e) => updateFieldValue(section.id, fv.id, e.target.value)}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"
+                            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                           />
                         </div>
                       );
@@ -348,7 +361,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
                           type="text"
                           value={currentValue}
                           onChange={(e) => updateFieldValue(section.id, fv.id, e.target.value)}
-                          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"
+                          className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                         />
                       </div>
                     );

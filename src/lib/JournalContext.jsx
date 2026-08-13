@@ -45,17 +45,36 @@ export function JournalProvider({ children }) {
         }
     }, [user]);
 
-    const fetchJournals = async () => {
+    const [page, setPage] = useState(1);
+    const [perPage] = useState(10);
+    const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+
+    const fetchJournals = useCallback(async (targetPage = page) => {
         try {
             setLoading(true);
-            const res = await api.get("/api/v1/journals");
-            const mapped = res.data.map(j => ({ ...j, id: j.uuid || j.id }));
-            setJournals(mapped);
+            const res = await api.get(`/api/v1/journals?page=${targetPage}&per_page=${perPage}`);
+            if (res.data && res.data.items) {
+                const mapped = res.data.items.map(j => ({ ...j, id: j.uuid || j.id }));
+                setJournals(mapped);
+                setPagination({
+                    total: res.data.total ?? mapped.length,
+                    totalPages: res.data.total_pages ?? 1
+                });
+            } else {
+                const items = Array.isArray(res.data) ? res.data : [];
+                setJournals(items.map(j => ({ ...j, id: j.uuid || j.id })));
+                setPagination({ total: items.length, totalPages: 1 });
+            }
         } catch (err) {
             console.error("Failed to fetch journals:", err);
         } finally {
             setLoading(false);
         }
+    }, [page, perPage]);
+
+    const changePage = (newPage) => {
+        setPage(newPage);
+        fetchJournals(newPage);
     };
 
     const fetchAnalytics = async () => {
@@ -187,6 +206,10 @@ export function JournalProvider({ children }) {
             analytics,
             latestJournalStructure: latestStructure,
             loading,
+            page,
+            perPage,
+            pagination,
+            changePage,
             loadJournalDetail,
             handleCreateSubmit,
             handleDelete,
@@ -202,11 +225,16 @@ export function JournalProvider({ children }) {
             analytics,
             latestStructure,
             loading,
+            page,
+            perPage,
+            pagination,
             loadJournalDetail,
             handleCreateSubmit,
             handleDelete,
             handleDeleteTemplate,
             handleUpdateJournal,
+            fetchJournals,
+            fetchAnalytics
         ]
     );
 

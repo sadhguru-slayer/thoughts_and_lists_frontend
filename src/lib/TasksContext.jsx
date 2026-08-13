@@ -35,20 +35,42 @@ export function TasksProvider({ children }) {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
 
-    const fetchTasks = useCallback(async (activeFilters = filters) => {
+    const [page, setPage] = useState(1);
+    const [perPage] = useState(15);
+    const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+
+    const fetchTasks = useCallback(async (activeFilters = filters, targetPage = page) => {
         try {
             setLoading(true);
-            const res = await api.get("/api/v1/tasks", {
-                params: buildQueryParams(activeFilters),
-            });
-            const mapped = res.data.map(t => ({ ...t, id: t.uuid || t.id }));
-            setTasks(mapped);
+            const params = {
+                ...buildQueryParams(activeFilters),
+                page: targetPage,
+                per_page: perPage,
+            };
+            const res = await api.get("/api/v1/tasks", { params });
+            if (res.data && res.data.items) {
+                const mapped = res.data.items.map(t => ({ ...t, id: t.uuid || t.id }));
+                setTasks(mapped);
+                setPagination({
+                    total: res.data.total ?? mapped.length,
+                    totalPages: res.data.total_pages ?? 1
+                });
+            } else {
+                const rawItems = Array.isArray(res.data) ? res.data : [];
+                setTasks(rawItems.map(t => ({ ...t, id: t.uuid || t.id })));
+                setPagination({ total: rawItems.length, totalPages: 1 });
+            }
         } catch (err) {
             console.error("Failed to fetch tasks:", err);
         } finally {
             setLoading(false);
         }
-    }, [filters]);
+    }, [filters, page, perPage]);
+
+    const changePage = (newPage) => {
+        setPage(newPage);
+        fetchTasks(filters, newPage);
+    };
 
     useEffect(() => {
         if (user) {
@@ -131,6 +153,10 @@ export function TasksProvider({ children }) {
             tasks,
             loading,
             filters,
+            page,
+            perPage,
+            pagination,
+            changePage,
             addTask,
             editTask,
             deleteTask,
@@ -146,6 +172,9 @@ export function TasksProvider({ children }) {
             tasks,
             loading,
             filters,
+            page,
+            perPage,
+            pagination,
             addTask,
             editTask,
             deleteTask,

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useTasks } from "@/lib/TasksContext";
 import { notify } from "@/lib/notify";
 import DateTimePicker from "./DateTimePicker";
+import ReminderPicker from "./ReminderPicker";
 import RecurrenceSelect from "./RecurrenceSelect";
 import { toDatetimeLocalValue } from "@/lib/taskUtils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -268,18 +269,23 @@ export default function TaskDetailSheet({ task, onClose }) {
                                         <label className={labelClass}>Due date</label>
                                         <DateTimePicker
                                             value={dueDate}
-                                            onChange={setDueDate}
+                                            onChange={(val) => {
+                                                setDueDate(val);
+                                                if (!reminderAt || reminderAt === dueDate) {
+                                                    setReminderAt(val);
+                                                }
+                                            }}
                                             placeholder="No due date"
                                         />
                                     </div>
                                     <div>
                                         <label className={`${labelClass} flex items-center gap-1`}>
-                                            <Bell className="w-3 h-3" /> Reminder
+                                            <Bell className="w-3 h-3 text-violet-500" /> Reminder
                                         </label>
-                                        <DateTimePicker
+                                        <ReminderPicker
+                                            dueDate={dueDate}
                                             value={reminderAt}
                                             onChange={setReminderAt}
-                                            placeholder="Defaults to due date"
                                         />
                                     </div>
 
@@ -288,6 +294,7 @@ export default function TaskDetailSheet({ task, onClose }) {
                                         <RecurrenceSelect
                                             value={recurrence}
                                             onChange={setRecurrence}
+                                            dueDate={dueDate}
                                         />
                                     </div>
                                 </>

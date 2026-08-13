@@ -40,17 +40,51 @@ export function ThoughtsProvider({ children }) {
         }
     }, [user]);
 
-    const fetchThoughts = async () => {
+    const [page, setPage] = useState(1);
+    const [perPage] = useState(15);
+    const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const fetchThoughts = useCallback(async (targetPage = page, currentSearch = searchQuery) => {
         try {
             setLoading(true);
-            const res = await api.get("/api/v1/thoughts");
-            const mapped = res.data.map(toThoughtSummary);
-            setThoughts(mapped);
+            const params = new URLSearchParams({
+                page: targetPage.toString(),
+                per_page: perPage.toString()
+            });
+            if (currentSearch) {
+                params.append("search", currentSearch);
+            }
+            
+            const res = await api.get(`/api/v1/thoughts?${params.toString()}`);
+            if (res.data && res.data.items) {
+                const mapped = res.data.items.map(toThoughtSummary);
+                setThoughts(mapped);
+                setPagination({
+                    total: res.data.total ?? mapped.length,
+                    totalPages: res.data.total_pages ?? 1
+                });
+            } else {
+                const rawItems = Array.isArray(res.data) ? res.data : [];
+                setThoughts(rawItems.map(toThoughtSummary));
+                setPagination({ total: rawItems.length, totalPages: 1 });
+            }
         } catch (err) {
             console.error("Failed to fetch thoughts:", err);
         } finally {
             setLoading(false);
         }
+    }, [page, perPage, searchQuery]);
+
+    const changePage = (newPage) => {
+        setPage(newPage);
+        fetchThoughts(newPage, searchQuery);
+    };
+    
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+        setPage(1);
+        fetchThoughts(1, query);
     };
 
     const fetchThoughtById = useCallback(async (id) => {
@@ -118,6 +152,12 @@ export function ThoughtsProvider({ children }) {
         () => ({
             thoughts,
             loading,
+            page,
+            perPage,
+            pagination,
+            changePage,
+            searchQuery,
+            handleSearch,
             addThought,
             editThought,
             deleteThought,
@@ -125,7 +165,7 @@ export function ThoughtsProvider({ children }) {
             fetchThoughtById,
             refreshThoughts: fetchThoughts
         }),
-        [thoughts, loading, addThought, editThought, deleteThought, deleteThoughts, fetchThoughtById]
+        [thoughts, loading, page, perPage, pagination, searchQuery, addThought, editThought, deleteThought, deleteThoughts, fetchThoughtById, fetchThoughts]
     );
 
     return (

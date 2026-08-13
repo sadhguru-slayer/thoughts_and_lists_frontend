@@ -8,10 +8,10 @@ import { useRouter } from "next/navigation";
 
 function SectionCard({ icon: Icon, title, children }) {
     return (
-        <div className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2.5 px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
-                <Icon className="w-4 h-4 text-zinc-400" />
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{title}</h2>
+        <div className="rounded-3xl border border-zinc-200/80 bg-white/80 dark:border-zinc-800 dark:bg-zinc-950/80 backdrop-blur-md shadow-xs overflow-hidden transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
+            <div className="flex items-center gap-2.5 px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/60">
+                <Icon className="w-4 h-4 text-violet-500" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{title}</h2>
             </div>
             <div className="px-6 py-5 space-y-5">
                 {children}
@@ -30,8 +30,8 @@ function Toggle({ checked, onChange, disabled }) {
                 disabled={disabled}
                 onChange={onChange}
             />
-            <div className="w-11 h-6 rounded-full transition-colors bg-zinc-200 dark:bg-zinc-700 peer-checked:bg-zinc-900 dark:peer-checked:bg-zinc-100 peer-disabled:opacity-50">
-                <span className={`absolute top-0.5 left-0.5 block h-5 w-5 rounded-full bg-white dark:bg-zinc-900 shadow transition-transform duration-200 ${checked ? "translate-x-5" : "translate-x-0"}`} />
+            <div className="w-11 h-6 rounded-full transition-colors bg-zinc-200 dark:bg-zinc-800 peer-checked:bg-violet-600 dark:peer-checked:bg-violet-500 peer-disabled:opacity-50">
+                <span className={`absolute top-0.5 left-0.5 block h-5 w-5 rounded-full bg-white dark:bg-zinc-900 shadow-sm transition-transform duration-200 ${checked ? "translate-x-5" : "translate-x-0"}`} />
             </div>
         </label>
     );
@@ -103,18 +103,18 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="max-w-xl mx-auto flex flex-col gap-6 py-6">
+        <div className="max-w-xl mx-auto flex flex-col gap-6 py-6 pb-20">
             {/* Page header */}
             <div>
                 <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Settings</h1>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Manage your account and preferences.</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Manage your account and preferences.</p>
             </div>
 
             {/* Reminders */}
             <SectionCard icon={Bell} title="Reminders">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Daily journal reminder</p>
+                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Daily journal reminder</p>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Receive an email reminder to write your journal.</p>
                     </div>
                     <Toggle
@@ -127,7 +127,7 @@ export default function SettingsPage() {
                 {journalReminderActive && (
                     <div className="grid grid-cols-2 gap-4 pt-1">
                         <div>
-                            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5 block">
+                            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5 block">
                                 Reminder time
                             </label>
                             <input
@@ -135,32 +135,32 @@ export default function SettingsPage() {
                                 value={journalReminderTime}
                                 onChange={(e) => setJournalReminderTime(e.target.value)}
                                 disabled={saving}
-                                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 px-3 py-2.5 text-sm text-zinc-800 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition-shadow dark:[color-scheme:dark]"
+                                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 px-3.5 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-all dark:[color-scheme:dark]"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5 block">
+                            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5 block">
                                 Timezone
                             </label>
                             <input
                                 type="text"
                                 value={timezone}
                                 readOnly
-                                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-400 dark:text-zinc-500 outline-none cursor-not-allowed"
+                                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-900/40 px-3.5 py-2.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 outline-none cursor-not-allowed"
                             />
                             <p className="text-[11px] text-zinc-400 mt-1">Auto-detected from browser.</p>
                         </div>
                     </div>
                 )}
 
-                <div className="flex justify-end pt-1">
+                <div className="flex justify-end pt-2">
                     <button
                         onClick={handleSaveSettings}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold px-5 py-2.5 transition-all active:scale-95 hover:opacity-90 disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold px-5 py-2.5 transition-all active:scale-95 hover:opacity-90 disabled:opacity-50 shadow-xs"
                     >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        Save
+                        Save preferences
                     </button>
                 </div>
             </SectionCard>
@@ -168,12 +168,12 @@ export default function SettingsPage() {
             {/* Account Security */}
             <SectionCard icon={ShieldCheck} title="Account security">
                 <div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                    <p className="text-xs leading-relaxed text-zinc-600 dark:text-zinc-400 mb-4">
                         To change your password, request a reset OTP — you'll be logged out immediately.
                     </p>
                     <button
                         onClick={handlePasswordReset}
-                        className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm font-semibold text-zinc-700 dark:text-zinc-200 px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors active:scale-95"
+                        className="inline-flex items-center gap-2 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-200 px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors active:scale-95"
                     >
                         Reset password
                     </button>
@@ -184,7 +184,7 @@ export default function SettingsPage() {
             <div className="flex justify-center sm:hidden pt-2">
                 <button
                     onClick={logout}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors p-2"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors p-2"
                 >
                     <LogOut className="w-4 h-4" />
                     Log out

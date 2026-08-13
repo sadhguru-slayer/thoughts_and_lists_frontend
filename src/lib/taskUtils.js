@@ -29,9 +29,35 @@ export function formatTaskDate(iso) {
     }
 }
 
+export function formatFriendlyDateTime(value) {
+    if (!value) return "";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    const diffDays = Math.round((targetDate - today) / (1000 * 60 * 60 * 24));
+
+    const timeStr = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+
+    if (diffDays === 0) return `Today at ${timeStr}`;
+    if (diffDays === 1) return `Tomorrow at ${timeStr}`;
+    if (diffDays === -1) return `Yesterday at ${timeStr}`;
+    if (diffDays > 1 && diffDays < 7) {
+        const weekday = d.toLocaleDateString([], { weekday: "short" });
+        return `${weekday} at ${timeStr}`;
+    }
+
+    const dateStr = d.toLocaleDateString([], { month: "short", day: "numeric" });
+    return `${dateStr} at ${timeStr}`;
+}
+
 export function toDatetimeLocalValue(iso) {
     if (!iso) return "";
     const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
     const pad = (n) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
@@ -45,3 +71,28 @@ export function isOverdue(task) {
     if (!task?.due_date || task.completed || task.status === "COMPLETED") return false;
     return new Date(task.due_date) < new Date();
 }
+
+export function getPresetDatetime(preset, customTime = "09:00") {
+    const now = new Date();
+    let target = new Date();
+    const [hours, minutes] = customTime.split(":").map(Number);
+
+    if (preset === "today") {
+        target.setHours(hours, minutes, 0, 0);
+        if (target < now) {
+            // If today's preset time has passed, set to 1 hour from now
+            target = new Date(now.getTime() + 60 * 60 * 1000);
+        }
+    } else if (preset === "tomorrow") {
+        target.setDate(target.getDate() + 1);
+        target.setHours(hours, minutes, 0, 0);
+    } else if (preset === "next_week") {
+        target.setDate(target.getDate() + 7);
+        target.setHours(hours, minutes, 0, 0);
+    } else if (preset === "in_1_hour") {
+        target = new Date(now.getTime() + 60 * 60 * 1000);
+    }
+
+    return toDatetimeLocalValue(target);
+}
+

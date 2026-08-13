@@ -3,11 +3,12 @@
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader2, Search } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import TaskInput from "@/components/tasks/TaskInput";
 import TaskCard from "@/components/tasks/TaskCard";
 import TaskFilters from "@/components/tasks/TaskFilters";
 import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
+import Pagination from "@/components/ui/Pagination";
 import { useTasks } from "@/lib/TasksContext";
 
 function TasksPageInner() {
@@ -15,6 +16,10 @@ function TasksPageInner() {
         tasks,
         loading,
         filters,
+        page,
+        perPage,
+        pagination,
+        changePage,
         updateFilters,
         completeTask,
         uncompleteTask,
@@ -24,6 +29,7 @@ function TasksPageInner() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [searchInput, setSearchInput] = useState(filters.search || "");
     const searchParams = useSearchParams();
+    const router = useRouter();
 
     // Auto-open task from URL ?task=id
     useEffect(() => {
@@ -38,7 +44,7 @@ function TasksPageInner() {
             setSelectedTask(found);
         } else if (!loading) {
             // Fetch the task directly if not in the current filtered list
-            fetchTaskById(Number(taskId))
+            fetchTaskById(taskId)
                 .then((data) => { if (data) setSelectedTask(data); })
                 .catch(() => {}); // silently fail for invalid IDs
         }
@@ -46,12 +52,17 @@ function TasksPageInner() {
     }, [searchParams, tasks.length, loading]);
 
     const handleOpen = useCallback((task) => {
-        setSelectedTask(task);
-    }, []);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("task", task.id);
+        router.push(`?${params.toString()}`, { scroll: false });
+    }, [router, searchParams]);
 
     const handleClose = useCallback(() => {
-        setSelectedTask(null);
-    }, []);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("task");
+        const query = params.toString();
+        router.push(query ? `?${query}` : "?", { scroll: false });
+    }, [router, searchParams]);
 
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";
@@ -101,6 +112,15 @@ function TasksPageInner() {
                                 />
                             ))}
                         </AnimatePresence>
+
+                        <Pagination
+                            currentPage={page}
+                            totalPages={pagination?.totalPages ?? 1}
+                            totalItems={pagination?.total ?? tasks.length}
+                            perPage={perPage}
+                            onPageChange={changePage}
+                            className="mt-4"
+                        />
                     </div>
                 )}
 
