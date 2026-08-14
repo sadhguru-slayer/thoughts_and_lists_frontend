@@ -2,10 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Plus, Trash2, X } from "lucide-react";
+import { Loader2, Plus, Trash2, X, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 function newClientKey() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -27,6 +41,7 @@ function sectionFromTemplate(template) {
     name: template.name,
     reusable: true,
     fieldValues: fields.map((f) => ({
+      clientKey: newClientKey(),
       templateFieldId: f.id,
       label: f.label,
       field_type: f.field_type,
@@ -49,6 +64,7 @@ function sectionFromLatestStructureEntry(apiSection, templates) {
       templateFieldId = match?.id;
     }
     return {
+      clientKey: newClientKey(),
       templateFieldId,
       label: f.label,
       field_type: f.field_type,
@@ -92,81 +108,120 @@ const inputClass = "w-full rounded-xl border border-zinc-200 bg-white/50 backdro
 
 const labelClass = "text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block mb-2";
 
-function CustomFieldRow({ fieldIndex, fv, onChange, onRemove, disabled }) {
-  if (fv.field_type === "checkbox") {
-    return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-white/40 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-          {fv.label}
-        </span>
-        <div className="flex flex-col items-end sm:flex-row gap-3 sm:items-center">
-          <label className="flex items-center cursor-pointer gap-2 scale-110 opacity-90 transition-opacity hover:opacity-100">
-            <input
-              type="checkbox"
+function SortableCustomFieldRow({ fv, onChange, onRemove, disabled }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: fv.clientKey });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : "auto",
+  };
+
+  const renderInput = () => {
+    if (fv.field_type === "checkbox") {
+      return (
+        <div className="flex flex-1 items-center justify-between gap-3 px-4 py-3">
+          <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            {fv.label}
+          </span>
+          <div className="flex flex-col items-end sm:flex-row gap-3 sm:items-center">
+            <label className="flex items-center cursor-pointer gap-2 scale-110 opacity-90 transition-opacity hover:opacity-100">
+              <input
+                type="checkbox"
+                disabled={disabled}
+                checked={fv.value === "true" || fv.value === true}
+                onChange={(e) => onChange(e.target.checked ? "true" : "false")}
+                className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-600 disabled:opacity-50"
+              />
+            </label>
+            <button
+              type="button"
               disabled={disabled}
-              checked={fv.value === "true" || fv.value === true}
-              onChange={(e) =>
-                onChange(fieldIndex, e.target.checked ? "true" : "false")
-              }
-              className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-600 disabled:opacity-50"
-            />
-          </label>
+              onClick={onRemove}
+              className="p-1.5 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-1 flex-1 py-1 pr-1">
+        <div className="flex items-start justify-between gap-2 px-1">
+          <label className={`${labelClass} mb-1 normal-case tracking-normal`}>{fv.label}</label>
           <button
             type="button"
             disabled={disabled}
-            onClick={() => onRemove(fieldIndex)}
-            className="p-1.5 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
+            onClick={onRemove}
+            className="p-1 text-zinc-400 hover:text-red-500 transition-colors rounded-md disabled:opacity-50"
           >
-            <Trash2 className="w-4 h-4" />
+            <X className="w-4 h-4" />
           </button>
         </div>
+        {fv.field_type === "richtext" ? (
+          <RichTextEditor
+            content={fv.value ?? ""}
+            onChange={(html) => onChange(html)}
+            disabled={disabled}
+            placeholder={`Write ${fv.label}…`}
+            minHeight="120px"
+          />
+        ) : fv.field_type === "textarea" ? (
+          <textarea
+            rows={3}
+            disabled={disabled}
+            value={fv.value ?? ""}
+            onChange={(e) => onChange(e.target.value)}
+            className={inputClass}
+          />
+        ) : (
+          <input
+            type="text"
+            disabled={disabled}
+            value={fv.value ?? ""}
+            onChange={(e) => onChange(e.target.value)}
+            className={inputClass}
+          />
+        )}
       </div>
     );
-  }
+  };
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-start justify-between gap-2 px-1">
-        <label className={`${labelClass} mb-1 normal-case tracking-normal`}>{fv.label}</label>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => onRemove(fieldIndex)}
-          className="p-1 text-zinc-400 hover:text-red-500 transition-colors rounded-md disabled:opacity-50"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-      {fv.field_type === "richtext" ? (
-        <RichTextEditor
-          content={fv.value ?? ""}
-          onChange={(html) => onChange(fieldIndex, html)}
-          disabled={disabled}
-          placeholder={`Write ${fv.label}…`}
-          minHeight="120px"
-        />
-      ) : fv.field_type === "textarea" ? (
-        <textarea
-          rows={3}
-          disabled={disabled}
-          value={fv.value ?? ""}
-          onChange={(e) => onChange(fieldIndex, e.target.value)}
-          className={inputClass}
-        />
-      ) : (
-        <input
-          type="text"
-          disabled={disabled}
-          value={fv.value ?? ""}
-          onChange={(e) => onChange(fieldIndex, e.target.value)}
-          className={inputClass}
-        />
-      )}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-start gap-2 group rounded-xl transition-colors ${
+        isDragging
+          ? "bg-zinc-100/80 dark:bg-zinc-800/80 shadow-md ring-1 ring-zinc-300 dark:ring-zinc-600"
+          : "hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30 border border-zinc-100 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40"
+      }`}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className={`mt-4 ml-2 flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-zinc-500 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ${fv.field_type === 'checkbox' ? 'mt-3.5' : ''}`}
+        title="Drag to reorder"
+        aria-label="Drag to reorder field"
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+
+      {renderInput()}
     </div>
   );
 }
-
-
 
 function AddCustomFields({ sectionKey, onAddField, disabled }) {
   const [newLabel, setNewLabel] = useState("");
@@ -274,15 +329,15 @@ export default function JournalCreateForm({
     );
   };
 
-  const setFieldValue = (clientKey, fieldIndex, value) => {
+  const setFieldValue = (sectionClientKey, fieldClientKey, value) => {
     setDraftSections((s) =>
       s.map((sec) =>
-        sec.clientKey !== clientKey
+        sec.clientKey !== sectionClientKey
           ? sec
           : {
             ...sec,
-            fieldValues: sec.fieldValues.map((fv, i) =>
-              i === fieldIndex ? { ...fv, value } : fv
+            fieldValues: sec.fieldValues.map((fv) =>
+              fv.clientKey === fieldClientKey ? { ...fv, value } : fv
             ),
           }
       )
@@ -301,6 +356,7 @@ export default function JournalCreateForm({
             fieldValues: [
               ...sec.fieldValues,
               {
+                clientKey: newClientKey(),
                 templateFieldId: undefined,
                 label: trimmed,
                 field_type,
@@ -312,16 +368,33 @@ export default function JournalCreateForm({
     );
   };
 
-  const removeCustomField = (clientKey, fieldIndex) => {
+  const removeCustomField = (sectionClientKey, fieldClientKey) => {
     setDraftSections((s) =>
       s.map((sec) =>
-        sec.clientKey !== clientKey
+        sec.clientKey !== sectionClientKey
           ? sec
           : {
             ...sec,
-            fieldValues: sec.fieldValues.filter((_, i) => i !== fieldIndex),
+            fieldValues: sec.fieldValues.filter((fv) => fv.clientKey !== fieldClientKey),
           }
       )
+    );
+  };
+
+  const handleDragEnd = (sectionClientKey, event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setDraftSections((prev) =>
+      prev.map((section) => {
+        if (section.clientKey !== sectionClientKey) return section;
+        const oldIndex = section.fieldValues.findIndex((f) => f.clientKey === active.id);
+        const newIndex = section.fieldValues.findIndex((f) => f.clientKey === over.id);
+        return {
+          ...section,
+          fieldValues: arrayMove(section.fieldValues, oldIndex, newIndex),
+        };
+      })
     );
   };
 
@@ -358,13 +431,16 @@ export default function JournalCreateForm({
     }
   };
 
-  // Strip HTML tags to check if the rich editor actually has content
   const hasRichContent = content.replace(/<[^>]*>/g, "").trim().length > 0;
 
   const canSubmit =
     ready &&
     !!localDatetime &&
     (hasRichContent || draftSections.length > 0);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   return (
     <motion.form
@@ -590,18 +666,28 @@ export default function JournalCreateForm({
                     </button>
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    {sec.fieldValues.map((fv, idx) => (
-                      <CustomFieldRow
-                        key={`${sec.clientKey}-f-${idx}`}
-                        fv={fv}
-                        fieldIndex={idx}
-                        disabled={isSubmitting}
-                        onChange={(i, v) => setFieldValue(sec.clientKey, i, v)}
-                        onRemove={(i) => removeCustomField(sec.clientKey, i)}
-                      />
-                    ))}
-                  </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(event) => handleDragEnd(sec.clientKey, event)}
+                  >
+                    <SortableContext
+                      items={sec.fieldValues.map((f) => f.clientKey)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="flex flex-col gap-3">
+                        {sec.fieldValues.map((fv) => (
+                          <SortableCustomFieldRow
+                            key={fv.clientKey}
+                            fv={fv}
+                            disabled={isSubmitting}
+                            onChange={(v) => setFieldValue(sec.clientKey, fv.clientKey, v)}
+                            onRemove={() => removeCustomField(sec.clientKey, fv.clientKey)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
 
                   <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                     <AddCustomFields

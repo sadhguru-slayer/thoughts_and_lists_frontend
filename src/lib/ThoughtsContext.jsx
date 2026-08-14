@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import api from "./api";
 import { useAuth } from "./AuthContext";
+import { notify } from "./notify";
 
 const ThoughtsContext = createContext(null);
 
@@ -22,6 +23,10 @@ function toThoughtSummary(thought) {
         user_id: thought.user_id,
         created_at: thought.created_at,
         updated_at: thought.updated_at,
+        is_pinned: thought.is_pinned || false,
+        pinned_at: thought.pinned_at,
+        pinned_order: thought.pinned_order || 0,
+        is_starred: thought.is_starred || false,
     };
 }
 
@@ -97,20 +102,55 @@ export function ThoughtsProvider({ children }) {
     }, []);
 
     const addThought = useCallback(async ({ title, content }) => {
+        const tempId = `temp-${Date.now()}`;
+        const tempThought = {
+            id: tempId,
+            title: title.trim(),
+            content_preview: truncate(content.trim(), CONTENT_PREVIEW_MAX),
+            user_id: user?.id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_pinned: false,
+            is_starred: false,
+        };
+
+        setThoughts((prev) => [tempThought, ...prev]);
+
         try {
             const res = await api.post("/api/v1/thoughts", {
                 title: (title || "").trim(),
                 content: (content || "").trim()
             });
-            setThoughts((prev) => [toThoughtSummary(res.data), ...prev]);
+            const realThought = toThoughtSummary(res.data);
+            setThoughts((prev) =>
+                prev.map((t) => (t.id === tempId ? realThought : t))
+            );
             return res.data;
         } catch (err) {
+            setThoughts((prev) => prev.filter((t) => t.id !== tempId));
+            notify.error("Failed to create note");
             console.error("Failed to add thought:", err);
             throw err;
         }
-    }, []);
+    }, [user]);
 
     const editThought = useCallback(async (id, { title, content }) => {
+        let rollbackList = null;
+        setThoughts((prev) => {
+            rollbackList = prev;
+            return prev.map((t) => {
+                if (t.id === id || t.uuid === id) {
+                    return {
+                        ...t,
+                        title: truncate((title || "").trim(), TITLE_PREVIEW_MAX),
+                        content_preview: truncate((content || "").trim(), CONTENT_PREVIEW_MAX),
+                        updated_at: new Date().toISOString(),
+                    };
+                }
+                return t;
+            });
+        });
+
         try {
             const res = await api.patch(`/api/v1/thoughts/${id}`, {
                 uuid: id,
@@ -124,27 +164,79 @@ export function ThoughtsProvider({ children }) {
             );
             return updated;
         } catch (err) {
+            if (rollbackList) {
+                setThoughts(rollbackList);
+            }
+            notify.error("Failed to edit note");
             console.error("Failed to edit thought:", err);
             throw err;
         }
     }, []);
 
     const deleteThought = useCallback(async (id) => {
+        let rollbackList = null;
+        setThoughts((prev) => {
+            rollbackList = prev;
+            return prev.filter((t) => t.id !== id);
+        });
+
         try {
             await api.delete(`/api/v1/thoughts/${id}`);
-            setThoughts((prev) => prev.filter((t) => t.id !== id));
+            notify.success("Note deleted");
         } catch (err) {
+            if (rollbackList) {
+                setThoughts(rollbackList);
+            }
+            notify.error("Failed to delete note");
             console.error("Failed to delete thought:", err);
         }
     }, []);
 
     const deleteThoughts = useCallback(async (ids) => {
+        let rollbackList = null;
+        setThoughts((prev) => {
+            rollbackList = prev;
+            return prev.filter((t) => !ids.includes(t.id) && !ids.includes(t.uuid));
+        });
+
         try {
             await api.post("/api/v1/thoughts/bulk-delete", { uuids: ids });
-            setThoughts((prev) => prev.filter((t) => !ids.includes(t.id) && !ids.includes(t.uuid)));
         } catch (err) {
+            if (rollbackList) {
+                setThoughts(rollbackList);
+            }
+            notify.error("Failed to delete notes");
             console.error("Failed to bulk delete thoughts:", err);
             throw err;
+        }
+    }, []);
+
+    const togglePin = useCallback(async (id, currentPin) => {
+        const tempPinnedAt = !currentPin ? new Date().toISOString() : null;
+        setThoughts(prev => prev.map(t => t.id === id ? { ...t, is_pinned: !currentPin, pinned_at: tempPinnedAt } : t));
+
+        try {
+            const res = await api.patch(`/api/v1/thoughts/${id}`, { uuid: id, is_pinned: !currentPin });
+            const updated = res.data.thought || res.data;
+            setThoughts(prev => prev.map(t => t.id === id ? { ...t, is_pinned: updated.is_pinned, pinned_at: updated.pinned_at, pinned_order: updated.pinned_order } : t));
+        } catch(err) {
+            setThoughts(prev => prev.map(t => t.id === id ? { ...t, is_pinned: currentPin } : t));
+            notify.error("Failed to update pin status");
+            console.error("Failed to pin thought", err);
+        }
+    }, []);
+
+    const toggleStar = useCallback(async (id, currentStar) => {
+        setThoughts(prev => prev.map(t => t.id === id ? { ...t, is_starred: !currentStar } : t));
+
+        try {
+            const res = await api.patch(`/api/v1/thoughts/${id}`, { uuid: id, is_starred: !currentStar });
+            const updated = res.data.thought || res.data;
+            setThoughts(prev => prev.map(t => t.id === id ? { ...t, is_starred: updated.is_starred } : t));
+        } catch(err) {
+            setThoughts(prev => prev.map(t => t.id === id ? { ...t, is_starred: currentStar } : t));
+            notify.error("Failed to update star status");
+            console.error("Failed to star thought", err);
         }
     }, []);
 
@@ -163,9 +255,11 @@ export function ThoughtsProvider({ children }) {
             deleteThought,
             deleteThoughts,
             fetchThoughtById,
-            refreshThoughts: fetchThoughts
+            refreshThoughts: fetchThoughts,
+            togglePin,
+            toggleStar
         }),
-        [thoughts, loading, page, perPage, pagination, searchQuery, addThought, editThought, deleteThought, deleteThoughts, fetchThoughtById, fetchThoughts]
+        [thoughts, loading, page, perPage, pagination, searchQuery, addThought, editThought, deleteThought, deleteThoughts, fetchThoughtById, fetchThoughts, togglePin, toggleStar]
     );
 
     return (

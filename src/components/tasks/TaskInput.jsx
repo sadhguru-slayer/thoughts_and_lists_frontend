@@ -97,12 +97,11 @@ export default function TaskInput() {
 
     return (
         <div className="w-full mb-6">
-            <motion.form
-                layout
+            <form
                 onSubmit={handleSubmit}
                 className={cn(
-                    "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xs transition-all duration-200",
-                    isExpanded && "shadow-xl ring-1 ring-zinc-300 dark:ring-zinc-700"
+                    "bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl shadow-2xs transition-colors duration-150",
+                    isExpanded && "ring-1 ring-zinc-300 dark:ring-zinc-700"
                 )}
             >
                 <div className="flex items-center gap-3 px-4 py-3.5">
@@ -127,13 +126,14 @@ export default function TaskInput() {
                     )}
                 </div>
 
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                     {isExpanded && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="px-4 pb-4 space-y-4 border-t border-zinc-100 dark:border-zinc-800/80 pt-3 overflow-visible"
+                            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                            className="px-4 pb-4 space-y-4 border-t border-zinc-100 dark:border-zinc-800/80 pt-3 overflow-hidden"
                         >
                             {/* Optional Description */}
                             <textarea
@@ -242,7 +242,7 @@ export default function TaskInput() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </motion.form>
+            </form>
         </div>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ThoughtInput from "@/components/thoughts/ThoughtInput";
 import ThoughtCard from "@/components/thoughts/ThoughtCard";
@@ -8,7 +8,7 @@ import ThoughtPreview from "@/components/thoughts/ThoughtPreview";
 import Pagination from "@/components/ui/Pagination";
 import { useThoughts } from "@/lib/ThoughtsContext";
 import { AnimatePresence, motion } from "framer-motion";
-import { Trash2, CheckSquare, X, Loader2, StickyNote, Search } from "lucide-react";
+import { Trash2, CheckSquare, X, Loader2, StickyNote, Search, Pin, ListFilter, ArrowUpDown } from "lucide-react";
 import { notify } from "@/lib/notify";
 
 function ThoughtsPageInner() {
@@ -16,10 +16,43 @@ function ThoughtsPageInner() {
     const [selectedIds, setSelectedIds] = useState([]);
     const [previewThought, setPreviewThought] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [filterType, setFilterType] = useState("all"); // "all" | "pinned" | "starred"
+    const [sortOrder, setSortOrder] = useState("newest"); // "newest" | "oldest" | "title"
     const searchParams = useSearchParams();
     const router = useRouter();
 
     const isSelectMode = selectedIds.length > 0;
+
+    const processedThoughts = useMemo(() => {
+        let result = [...thoughts];
+
+        if (filterType === "pinned") {
+            result = result.filter(t => t.is_pinned);
+        } else if (filterType === "starred") {
+            result = result.filter(t => t.is_starred);
+        }
+
+        result.sort((a, b) => {
+            if (sortOrder === "title") {
+                return (a.title || "").localeCompare(b.title || "");
+            }
+            const aTime = new Date(a.created_at || a.updated_at || 0).getTime();
+            const bTime = new Date(b.created_at || b.updated_at || 0).getTime();
+            return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
+        });
+
+        return result;
+    }, [thoughts, filterType, sortOrder]);
+
+    const pinnedThoughts = useMemo(() => {
+        if (filterType !== "all") return [];
+        return processedThoughts.filter(t => t.is_pinned);
+    }, [processedThoughts, filterType]);
+
+    const otherThoughts = useMemo(() => {
+        if (filterType !== "all") return processedThoughts;
+        return processedThoughts.filter(t => !t.is_pinned);
+    }, [processedThoughts, filterType]);
 
     const handleSelect = useCallback((id) => {
         setSelectedIds((prev) =>
@@ -50,7 +83,6 @@ function ThoughtsPageInner() {
 
     const handleCancelSelect = () => setSelectedIds([]);
 
-    // Sync preview with URL param: ?thought=<uuid>
     useEffect(() => {
         const thoughtId = searchParams.get("thought");
         if (!thoughtId) {
@@ -65,8 +97,7 @@ function ThoughtsPageInner() {
                 .then((data) => { if (data) setPreviewThought(data); })
                 .catch(() => {});
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams, thoughts.length, loading]);
+    }, [searchParams, thoughts.length, loading, fetchThoughtById]);
 
     const handleOpen = useCallback((thought) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -87,19 +118,66 @@ function ThoughtsPageInner() {
 
     return (
         <>
-            <div className="w-full flex-1 pt-6 px-4 md:px-0 pb-28">
+            <div className="max-w-5xl mx-auto space-y-6 pt-4 pb-20">
+
+                {/* Header Greeting / Title */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-5">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                            <StickyNote className="w-6 h-6 text-zinc-700 dark:text-zinc-300" />
+                            Notes
+                        </h1>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                            Capture quick thoughts, ideas, and structured reflections.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Thought Input */}
                 <ThoughtInput />
 
-                {/* Search Bar */}
-                <div className="mb-6 relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                    <input
-                        type="text"
-                        placeholder="Search notes..."
-                        value={searchQuery}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all dark:text-zinc-200 placeholder:text-zinc-400"
-                    />
+                {/* Search & Filter Bar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <div className="relative flex-1 min-w-[200px]">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                        <input
+                            type="text"
+                            placeholder="Search notes..."
+                            value={searchQuery}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-500 transition-all dark:text-zinc-200 placeholder:text-zinc-400 shadow-2xs"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                        {/* Filter Dropdown */}
+                        <div className="relative flex items-center shrink-0">
+                            <ListFilter className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                            <select
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none shadow-2xs"
+                            >
+                                <option value="all">All Notes</option>
+                                <option value="pinned">Pinned Only</option>
+                                <option value="starred">Starred Only</option>
+                            </select>
+                        </div>
+
+                        {/* Sort Dropdown */}
+                        <div className="relative flex items-center shrink-0">
+                            <ArrowUpDown className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                            <select
+                                value={sortOrder}
+                                onChange={(e) => setSortOrder(e.target.value)}
+                                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none shadow-2xs"
+                            >
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="title">Title (A-Z)</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Multi-select toolbar */}
@@ -109,13 +187,13 @@ function ThoughtsPageInner() {
                             initial={{ opacity: 0, y: -8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}
-                            className="flex items-center gap-3 mb-4 px-1"
+                            className="flex items-center gap-3 px-1"
                         >
                             <button
                                 onClick={handleSelectAll}
-                                className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                                className="flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                             >
-                                <CheckSquare className="w-4 h-4" />
+                                <CheckSquare className="w-3.5 h-3.5" />
                                 {selectedIds.length === thoughts.length ? "Deselect All" : "Select All"}
                             </button>
 
@@ -134,7 +212,7 @@ function ThoughtsPageInner() {
                                 <button
                                     onClick={handleBulkDelete}
                                     disabled={isDeleting}
-                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-all active:scale-95 shadow-sm disabled:opacity-60"
+                                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all active:scale-95 shadow-2xs disabled:opacity-60"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                     {isDeleting ? "Deleting…" : `Delete ${selectedIds.length}`}
@@ -146,21 +224,51 @@ function ThoughtsPageInner() {
 
                 {/* Notes grid */}
                 {!loading && (
-                    <>
-                        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-                            {thoughts.map((thought) => (
-                                <div key={thought.id} className="break-inside-avoid">
-                                    <ThoughtCard
-                                        thought={thought}
-                                        isSelected={selectedIds.includes(thought.id)}
-                                        onSelect={handleSelect}
-                                        onOpen={handleOpen}
-                                        isSelectMode={isSelectMode}
-                                        onEnterSelectMode={handleEnterSelectMode}
-                                    />
+                    <div className="space-y-8">
+                        {pinnedThoughts.length > 0 && (
+                            <div>
+                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3 flex items-center gap-1.5">
+                                    <Pin className="w-3.5 h-3.5" /> Pinned
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {pinnedThoughts.map((thought) => (
+                                        <ThoughtCard
+                                            key={thought.id}
+                                            thought={thought}
+                                            isSelected={selectedIds.includes(thought.id)}
+                                            onSelect={handleSelect}
+                                            onOpen={handleOpen}
+                                            isSelectMode={isSelectMode}
+                                            onEnterSelectMode={handleEnterSelectMode}
+                                        />
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        )}
+                        
+                        {otherThoughts.length > 0 && (
+                            <div>
+                                {pinnedThoughts.length > 0 && (
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3">
+                                        Others
+                                    </h3>
+                                )}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {otherThoughts.map((thought) => (
+                                        <ThoughtCard
+                                            key={thought.id}
+                                            thought={thought}
+                                            isSelected={selectedIds.includes(thought.id)}
+                                            onSelect={handleSelect}
+                                            onOpen={handleOpen}
+                                            isSelectMode={isSelectMode}
+                                            onEnterSelectMode={handleEnterSelectMode}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <Pagination
                             currentPage={page}
                             totalPages={pagination?.totalPages ?? 1}
@@ -169,27 +277,19 @@ function ThoughtsPageInner() {
                             onPageChange={changePage}
                             className="mt-6"
                         />
-                    </>
-                )}
-
-                {loading && (
-                    <div className="flex flex-col items-center justify-center gap-3 mt-20 text-zinc-400">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <p className="text-sm">Loading notes…</p>
                     </div>
                 )}
 
-                {!loading && thoughts.length === 0 && (
-                    <div className="flex flex-col items-center justify-center gap-3 mt-24 text-center">
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                            <StickyNote className="w-6 h-6 text-zinc-400" />
-                        </div>
-                        <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                            {searchQuery ? "No notes found" : "No notes yet"}
-                        </p>
-                        <p className="text-xs text-zinc-400 max-w-[200px]">
-                            {searchQuery ? "Try adjusting your search terms." : "Start capturing your thoughts above."}
-                        </p>
+                {loading && (
+                    <div className="flex flex-col items-center justify-center gap-3 py-16 text-zinc-400">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <p className="text-xs font-medium">Loading notes…</p>
+                    </div>
+                )}
+
+                {!loading && processedThoughts.length === 0 && (
+                    <div className="text-center py-16 text-zinc-400 dark:text-zinc-500 text-xs italic border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                        {searchQuery || filterType !== "all" ? "No matching notes found." : "No notes yet. Create one above to get started!"}
                     </div>
                 )}
             </div>
@@ -207,7 +307,6 @@ function ThoughtsPageInner() {
     );
 }
 
-// Wrap in Suspense because useSearchParams requires it in Next.js App Router
 export default function ThoughtsPage() {
     return (
         <Suspense>

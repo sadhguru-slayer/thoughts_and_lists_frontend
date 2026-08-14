@@ -21,11 +21,12 @@ function buildQueryParams(filters) {
     const params = {};
     if (filters.status) params.status = filters.status;
     if (filters.priority) params.priority = filters.priority;
-    if (filters.completed !== null) params.completed = filters.completed;
+    if (filters.completed !== null && filters.completed !== undefined) params.completed = filters.completed;
     if (filters.today) params.today = true;
     if (filters.overdue) params.overdue = true;
     if (filters.search?.trim()) params.search = filters.search.trim();
     if (filters.archived) params.archived = true;
+    if (filters.sort) params.sort = filters.sort;
     return params;
 }
 
@@ -141,6 +142,8 @@ export function TasksProvider({ children }) {
     }, []);
 
     const updateFilters = useCallback((next) => {
+        // Reset to page 1 whenever filters change so pagination stays correct
+        setPage(1);
         setFilters((prev) => ({ ...prev, ...next }));
     }, []);
 

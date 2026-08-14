@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useThoughts } from "@/lib/ThoughtsContext";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, StickyNote } from "lucide-react";
 import { motion } from "framer-motion";
 import TiptapEditor from "@/components/thoughts/TiptapEditor";
 
@@ -51,8 +51,8 @@ export default function ThoughtEditPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-full py-24">
-                <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+            <div className="flex items-center justify-center h-full py-24 text-zinc-400">
+                <Loader2 className="w-5 h-5 animate-spin" />
             </div>
         );
     }
@@ -60,12 +60,12 @@ export default function ThoughtEditPage() {
     if (notFound) {
         return (
             <div className="flex flex-col items-center justify-center h-full py-24 gap-4">
-                <p className="text-zinc-500 dark:text-zinc-400">Thought not found.</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Note not found.</p>
                 <button
                     onClick={() => router.push("/thoughts")}
-                    className="text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:underline"
+                    className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 hover:underline"
                 >
-                    Go back
+                    Back to Notes
                 </button>
             </div>
         );
@@ -73,64 +73,69 @@ export default function ThoughtEditPage() {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full flex-1 pt-6 pb-10 flex flex-col gap-6"
+            className="max-w-5xl mx-auto space-y-6 pt-4 pb-20"
         >
-            <div className="flex items-center gap-3">
-                <button
-                    onClick={() => router.push("/thoughts")}
-                    className="p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    aria-label="Back"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </button>
-                <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-                    Edit Thought
-                </h1>
-                <div className="ml-auto">
+            <div className="flex items-center justify-between gap-4 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-4">
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 shadow-sm ${saved
-                            ? "bg-green-500 text-white"
-                            : "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                            }`}
+                        onClick={() => router.push("/thoughts")}
+                        className="p-1.5 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        aria-label="Back to Notes"
                     >
-                        {saving ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Save className="w-4 h-4" />
-                        )}
-                        {saved ? "Saved!" : "Save"}
+                        <ArrowLeft className="w-4 h-4" />
                     </button>
+                    <h1 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                        <StickyNote className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
+                        Edit Note
+                    </h1>
                 </div>
-            </div>
 
-            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm px-4 py-3">
-                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1 block">
-                    Title
-                </label>
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Give it a title..."
-                    className="w-full text-base font-semibold bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
-                />
-            </div>
-
-            <div className="flex-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm px-4 py-3 flex flex-col">
-                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1 block">
-                    Content
-                </label>
-                <TiptapEditor
-                    content={content}
-                    onChange={setContent}
-                    placeholder="Write your thought here..."
+                <button
+                    onClick={handleSave}
                     disabled={saving}
-                    autoFocus={true}
-                />
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 shadow-2xs ${
+                        saved
+                            ? "bg-emerald-600 text-white"
+                            : "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:opacity-90"
+                    }`}
+                >
+                    {saving ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                        <Save className="w-3.5 h-3.5" />
+                    )}
+                    {saved ? "Saved!" : "Save Note"}
+                </button>
+            </div>
+
+            <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs p-4 space-y-4">
+                <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5 block">
+                        Title
+                    </label>
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Note title..."
+                        className="w-full text-base font-bold bg-transparent border-b border-zinc-200 dark:border-zinc-800 pb-2 outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-zinc-500 transition-colors"
+                    />
+                </div>
+
+                <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5 block">
+                        Content
+                    </label>
+                    <TiptapEditor
+                        content={content}
+                        onChange={setContent}
+                        placeholder="Write your note here..."
+                        disabled={saving}
+                        autoFocus={true}
+                    />
+                </div>
             </div>
         </motion.div>
     );

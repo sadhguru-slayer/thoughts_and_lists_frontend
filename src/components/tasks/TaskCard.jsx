@@ -23,75 +23,59 @@ export default function TaskCard({ task, onOpen, onToggleComplete }) {
         onOpen(task);
     };
 
-    // Priority accent bar colours
-    const accentColor = {
-        LOW: "bg-sky-400",
-        MEDIUM: "bg-amber-400",
-        HIGH: "bg-orange-500",
-        URGENT: "bg-red-500",
-    }[task.priority] ?? "bg-zinc-300";
-
     return (
         <motion.div
             layout
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             onClick={handleOpen}
             className={cn(
-                "group flex items-start gap-3 rounded-2xl border p-4 shadow-sm transition-all cursor-pointer overflow-hidden relative",
+                "group flex items-start gap-3 rounded-2xl border p-4 shadow-2xs transition-colors cursor-pointer overflow-hidden relative",
                 completed
-                    ? "border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/50 opacity-75"
-                    : "border-zinc-200 bg-white hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900",
-                overdue && !completed && "border-red-200 dark:border-red-900/50"
+                    ? "border-zinc-200/60 bg-zinc-50/60 dark:border-zinc-800/60 dark:bg-zinc-900/30 opacity-70"
+                    : "border-zinc-200/80 bg-white hover:border-zinc-300 hover:shadow-xs dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-zinc-700",
+                overdue && !completed && "border-red-200/80 dark:border-red-900/40"
             )}
         >
-            {/* Priority accent bar */}
-            {!completed && (
-                <span
-                    className={cn(
-                        "absolute left-0 top-3 bottom-3 w-1 rounded-r-full opacity-80",
-                        accentColor
-                    )}
-                    aria-hidden
-                />
-            )}
-
+            {/* Custom Checkbox */}
             <button
                 type="button"
                 onClick={handleToggle}
                 className={cn(
-                    "mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                    "mt-0.5 shrink-0 w-4 h-4 rounded-full border flex items-center justify-center transition-all",
                     completed
-                        ? "bg-green-500 border-green-500 text-white"
-                        : "border-zinc-300 dark:border-zinc-600 hover:border-green-500 dark:hover:border-green-500"
+                        ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-100 dark:border-zinc-100 dark:text-zinc-900"
+                        : "border-zinc-300 dark:border-zinc-600 hover:border-zinc-900 dark:hover:border-zinc-100"
                 )}
                 aria-label={completed ? "Mark incomplete" : "Mark complete"}
             >
-                {completed && <Check className="w-3 h-3" strokeWidth={3} />}
+                {completed && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
             </button>
 
-            <div className="flex-1 min-w-0 space-y-1.5 pl-1">
+            {/* Main content */}
+            <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-start justify-between gap-2">
                     <h3
                         className={cn(
-                            "text-[15px] font-bold text-zinc-900 dark:text-zinc-100 leading-snug tracking-tight",
-                            completed && "line-through text-zinc-400 dark:text-zinc-500"
+                            "text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug tracking-tight truncate",
+                            completed && "line-through text-zinc-400 dark:text-zinc-500 font-normal"
                         )}
                     >
                         {task.title}
                     </h3>
-                    <span className={cn("shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full", priority.className)}>
+                    <span className={cn("shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded", priority.className)}>
                         {priority.label}
                     </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className={cn("font-medium", status.className)}>{status.label}</span>
+                <div className="flex items-center gap-3 text-[11px] text-zinc-400 dark:text-zinc-500">
+                    <span className={cn("font-medium text-[10px]", status.className)}>{status.label}</span>
                     {task.due_date && (
                         <span
                             className={cn(
-                                "inline-flex items-center gap-1",
+                                "inline-flex items-center gap-1 text-[10px]",
                                 overdue ? "text-red-500 font-semibold" : "text-zinc-400 dark:text-zinc-500"
                             )}
                         >

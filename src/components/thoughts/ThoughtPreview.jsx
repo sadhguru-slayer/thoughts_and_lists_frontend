@@ -1,14 +1,15 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Edit2, Trash2, Loader2 } from "lucide-react";
+import { X, Edit2, Trash2, Loader2, Star, Pin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useThoughts } from "@/lib/ThoughtsContext";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 export default function ThoughtPreview({ thought, onClose }) {
     const router = useRouter();
-    const { deleteThought, fetchThoughtById } = useThoughts();
+    const { deleteThought, fetchThoughtById, togglePin, toggleStar } = useThoughts();
     const [fullThought, setFullThought] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -25,116 +26,122 @@ export default function ThoughtPreview({ thought, onClose }) {
     }, []);
 
     useEffect(() => {
-        if (!thought?.id) return;
+        if (!thought?.id && !thought?.uuid) return;
 
         let cancelled = false;
         setLoading(true);
         setError(null);
 
-        fetchThoughtById(thought.id)
+        const targetId = thought.uuid || thought.id;
+        fetchThoughtById(targetId)
             .then((data) => {
                 if (!cancelled) setFullThought(data);
             })
             .catch(() => {
-                if (!cancelled) setError("Failed to load thought.");
+                if (!cancelled) setError("Failed to load note.");
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);
             });
 
         return () => { cancelled = true; };
-    }, [thought?.id, fetchThoughtById]);
+    }, [thought?.id, thought?.uuid, fetchThoughtById]);
 
     const displayThought = fullThought || thought;
 
     const handleDelete = async () => {
-        await deleteThought(thought.id);
+        const targetId = displayThought.uuid || displayThought.id || thought.uuid || thought.id;
+        await deleteThought(targetId);
         onClose();
     };
 
     const handleEdit = () => {
-        router.push(`/thoughts/${thought.id}`);
-        onClose();
+        const targetId = displayThought.uuid || displayThought.id || thought.uuid || thought.id;
+        if (targetId) {
+            // Directly push to the note edit page without triggering query clear
+            router.push(`/thoughts/${targetId}`);
+        }
     };
 
     return (
         <AnimatePresence>
             {thought && (
                 <>
+                    {/* Backdrop */}
                     <motion.div
                         key="backdrop"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "linear" }}
                         onClick={onClose}
-                        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+                        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs"
                     />
+                    
+                    {/* Smooth Morphing Sheet */}
                     <motion.div
                         key="sheet"
-                        initial={{ y: "100%" }}
-                        animate={{ y: 0 }}
-                        exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 right-0 z-50 flex flex-col max-h-[85dvh] max-w-2xl mx-auto rounded-t-3xl bg-white dark:bg-zinc-900 shadow-2xl border-t border-zinc-200 dark:border-zinc-800"
+                        layout
+                        initial={{ y: "100%", opacity: 0.9 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: "100%", opacity: 0 }}
+                        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                        className="fixed bottom-0 left-0 right-0 z-50 flex flex-col max-h-[85dvh] max-w-2xl mx-auto rounded-t-3xl bg-white dark:bg-zinc-900 shadow-2xl border-t border-zinc-200 dark:border-zinc-800 overflow-hidden"
                     >
-                        <div className="flex justify-center pt-3 pb-1">
-                            <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        {/* Drag handle */}
+                        <div className="flex justify-center pt-3 pb-1 shrink-0">
+                            <div className="w-10 h-1 rounded-full bg-zinc-200 dark:bg-zinc-800" />
                         </div>
 
-                        <div className="flex items-start justify-between px-5 pt-3 pb-2 gap-4">
-                            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 leading-snug tracking-tight flex-1">
-                                {displayThought.title || "Untitled"}
-                            </h2>
-                            <button
-                                onClick={onClose}
-                                className="p-1.5 rounded-full text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex-shrink-0 mt-0.5"
-                                aria-label="Close"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+                        {/* Top bar header */}
+                        <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-100 dark:border-zinc-800/80 gap-3 shrink-0">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
+                                    {displayThought.title || "Untitled Note"}
+                                </h2>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleStar(displayThought.uuid || displayThought.id, displayThought.is_starred)}
+                                    className={cn("p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors", displayThought.is_starred ? "text-amber-500" : "text-zinc-400")}
+                                    title={displayThought.is_starred ? "Unstar note" : "Star note"}
+                                >
+                                    <Star className="w-4 h-4" fill={displayThought.is_starred ? "currentColor" : "none"} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => togglePin(displayThought.uuid || displayThought.id, displayThought.is_pinned)}
+                                    className={cn("p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors", displayThought.is_pinned ? "text-blue-500" : "text-zinc-400")}
+                                    title={displayThought.is_pinned ? "Unpin note" : "Pin note"}
+                                >
+                                    <Pin className="w-4 h-4" fill={displayThought.is_pinned ? "currentColor" : "none"} />
+                                </button>
+                                <button
+                                    onClick={onClose}
+                                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ml-1"
+                                    aria-label="Close"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto px-5 py-2 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed preview-content">
+                        {/* Note Body Preview */}
+                        <div className="flex-1 overflow-y-auto px-5 py-4 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed preview-content">
                             {loading ? (
-                                <div className="flex items-center justify-center py-8 text-zinc-400">
-                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                <div className="flex items-center justify-center py-12 text-zinc-400">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                 </div>
                             ) : error ? (
-                                <span className="text-red-400">{error}</span>
+                                <span className="text-red-500 font-medium">{error}</span>
                             ) : displayThought.content ? (
                                 <div dangerouslySetInnerHTML={{ __html: displayThought.content }} />
                             ) : (
-                                <span className="text-zinc-400 italic">No content.</span>
+                                <span className="text-zinc-400 italic">No content in this note.</span>
                             )}
                             <style jsx global>{`
-                                .preview-content ul[data-type="taskList"] {
-                                    list-style: none;
-                                    padding: 0;
-                                }
-                                .preview-content ul[data-type="taskList"] li {
-                                    display: flex;
-                                    align-items: flex-start;
-                                    margin-bottom: 0.5rem;
-                                }
-                                .preview-content ul[data-type="taskList"] li > label {
-                                    margin-right: 0.5rem;
-                                    user-select: none;
-                                    margin-top: 0.2rem;
-                                }
-                                .preview-content ul[data-type="taskList"] li > label input[type="checkbox"] {
-                                    accent-color: #3b82f6;
-                                    width: 1.1rem;
-                                    height: 1.1rem;
-                                    pointer-events: none;
-                                }
-                                .preview-content ul {
-                                    list-style-type: disc;
-                                    padding-left: 1.5rem;
-                                }
-                                .preview-content ol {
-                                    list-style-type: decimal;
-                                    padding-left: 1.5rem;
-                                }
                                 .preview-content p {
                                     margin-bottom: 0.5rem;
                                 }
@@ -147,7 +154,7 @@ export default function ThoughtPreview({ thought, onClose }) {
                                     padding: 0.75rem 1rem;
                                     color: #27272a;
                                     font-family: monospace;
-                                    font-size: 0.875rem;
+                                    font-size: 0.75rem;
                                     overflow-x: auto;
                                     margin-top: 0.5rem;
                                     margin-bottom: 0.5rem;
@@ -157,45 +164,32 @@ export default function ThoughtPreview({ thought, onClose }) {
                                     padding: 0.15rem 0.3rem;
                                     border-radius: 0.25rem;
                                     font-family: monospace;
-                                    font-size: 0.875rem;
-                                    color: #ef4444;
+                                    font-size: 0.75rem;
                                 }
                                 .dark .preview-content pre, .dark .preview-content code {
                                     background: #27272a;
                                     color: #e4e4e7;
                                 }
-                                .dark .preview-content code {
-                                    color: #fca5a5;
-                                }
-                                .preview-content pre code {
-                                    background: transparent;
-                                    padding: 0;
-                                    border-radius: 0;
-                                    color: inherit;
-                                }
-                                .dark .preview-content pre code {
-                                    background: transparent;
-                                    color: inherit;
-                                }
                             `}</style>
                         </div>
 
-                        <div className="flex gap-3 px-5 py-4 border-t border-zinc-100 dark:border-zinc-800">
+                        {/* Footer Action Buttons */}
+                        <div className="flex gap-2 px-5 py-3 border-t border-zinc-100 dark:border-zinc-800/80 shrink-0">
                             <button
                                 onClick={handleEdit}
                                 disabled={loading}
-                                className="flex items-center gap-2 flex-1 justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm font-semibold text-zinc-700 dark:text-zinc-200 py-3 transition-all hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 active:scale-95 disabled:opacity-50"
+                                className="flex items-center gap-2 flex-1 justify-center rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold py-2.5 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-2xs"
                             >
-                                <Edit2 className="w-4 h-4" />
-                                Edit
+                                <Edit2 className="w-3.5 h-3.5" />
+                                Edit Note
                             </button>
                             <button
                                 onClick={handleDelete}
                                 disabled={loading}
-                                className="flex items-center gap-2 flex-1 justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm font-semibold text-zinc-700 dark:text-zinc-200 py-3 transition-all hover:border-red-400 hover:text-red-600 dark:hover:text-red-400 active:scale-95 disabled:opacity-50"
+                                className="flex items-center gap-2 flex-1 justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-red-600 dark:text-red-400 py-2.5 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-[0.98] disabled:opacity-50"
                             >
-                                <Trash2 className="w-4 h-4" />
-                                Delete
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Delete Note
                             </button>
                         </div>
                     </motion.div>

@@ -17,7 +17,6 @@ export default function ThoughtInput() {
     const formRef = useRef(null);
 
     const submitNote = useCallback(async () => {
-        // Strip out empty tags to see if there's actual content
         const plainContent = content.replace(/<[^>]*>?/gm, '').trim();
         if (!title.trim() && !plainContent) {
             setIsExpanded(false);
@@ -40,8 +39,6 @@ export default function ThoughtInput() {
     useEffect(() => {
         function handleClickOutside(event) {
             if (formRef.current && !formRef.current.contains(event.target)) {
-                // If they click outside, do NOT auto-save. Just close if empty, or keep open if there's content so they don't lose it.
-                // We'll just keep it open if there's content so they have to explicitly close or save.
                 const plainContent = content.replace(/<[^>]*>?/gm, '').trim();
                 if (!title.trim() && !plainContent) {
                     setIsExpanded(false);
@@ -61,32 +58,33 @@ export default function ThoughtInput() {
     const handleClose = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        // If they click close, we just discard and shrink
         setTitle("");
         setContent("");
         setIsExpanded(false);
     };
 
     return (
-        <div className="w-full max-w-xl mx-auto mb-8 relative z-10" ref={formRef}>
+        <div className="w-full max-w-xl mx-auto mb-6 relative z-10" ref={formRef}>
             <motion.div
                 layout
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 className={cn(
-                    "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden transition-all",
+                    "bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl shadow-2xs overflow-hidden transition-colors",
                     isExpanded
-                        ? "shadow-xl ring-1 ring-zinc-300 dark:ring-zinc-700"
-                        : "hover:shadow-md dark:hover:border-zinc-700 cursor-text"
+                        ? "ring-1 ring-zinc-300 dark:ring-zinc-700 shadow-md"
+                        : "hover:shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 cursor-text"
                 )}
                 onClick={() => {
                     if (!isExpanded) setIsExpanded(true);
                 }}
             >
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                     {isExpanded && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                             className="px-5 pt-4 pb-2"
                         >
                             <input
@@ -102,7 +100,7 @@ export default function ThoughtInput() {
                     )}
                 </AnimatePresence>
 
-                <div className="flex items-start px-5 py-4">
+                <div className="flex items-start px-5 py-3.5">
                     {isExpanded ? (
                         <TiptapEditor 
                             content={content} 
@@ -112,12 +110,12 @@ export default function ThoughtInput() {
                         />
                     ) : (
                         <div className="flex w-full items-center">
-                            <span className="text-sm text-zinc-500 flex-1">Take a note...</span>
+                            <span className="text-xs text-zinc-500 dark:text-zinc-400 flex-1">Take a note...</span>
                             <button
                                 type="button"
-                                className="p-1.5 rounded-full text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-colors ml-2 shrink-0"
+                                className="p-1 rounded-full text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-colors ml-2 shrink-0"
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-4 h-4" />
                             </button>
                         </div>
                     )}
@@ -126,16 +124,17 @@ export default function ThoughtInput() {
                 <AnimatePresence>
                     {isExpanded && (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex justify-end items-center px-4 py-3 bg-zinc-50/50 dark:bg-zinc-900/50 backdrop-blur gap-3 border-t border-zinc-100 dark:border-zinc-800"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            className="flex justify-end items-center px-4 py-2.5 bg-zinc-50/50 dark:bg-zinc-900/50 backdrop-blur-xs gap-2 border-t border-zinc-100 dark:border-zinc-800/80"
                         >
                             <button
                                 type="button"
                                 onClick={handleClose}
                                 disabled={isSubmitting}
-                                className="text-sm font-semibold tracking-wide text-zinc-600 dark:text-zinc-400 px-4 py-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                                className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 px-3.5 py-1.5 rounded-xl hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
                             >
                                 Close
                             </button>
@@ -143,9 +142,9 @@ export default function ThoughtInput() {
                                 type="button"
                                 onClick={handleAddNote}
                                 disabled={isSubmitting || (!title.trim() && !content.replace(/<[^>]*>?/gm, '').trim())}
-                                className="flex items-center gap-2 text-sm font-bold tracking-wide text-white bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 px-5 py-2 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                                className="flex items-center gap-2 text-xs font-bold text-white bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 px-4 py-1.5 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs active:scale-[0.98]"
                             >
-                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add Note"}
+                                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Add Note"}
                             </button>
                         </motion.div>
                     )}

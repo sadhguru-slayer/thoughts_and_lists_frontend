@@ -1,12 +1,28 @@
 "use client";
 
 import { formatJournalDetailDate } from "@/lib/formatDate";
-import { motion } from "framer-motion";
-import { ArrowLeft, Pencil, Save, Trash2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, GripVertical, Pencil, Save, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { notify } from "@/lib/notify";
 import RichTextEditor, { RichTextReadonly } from "@/components/ui/RichTextEditor";
 
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+// ─── Read-only field renderer ─────────────────────────────────────────────────
 function FieldReadonly({ field }) {
   const isCheckbox = field.field_type === "checkbox";
   const checked =
@@ -21,12 +37,14 @@ function FieldReadonly({ field }) {
           {field.label}
         </span>
         <span
-          className={`inline-flex h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors duration-300 ${checked ? "bg-zinc-900 dark:bg-zinc-100" : "bg-zinc-200 dark:bg-zinc-700"
-            }`}
+          className={`inline-flex h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors duration-300 ${
+            checked ? "bg-zinc-900 dark:bg-zinc-100" : "bg-zinc-200 dark:bg-zinc-700"
+          }`}
         >
           <span
-            className={`block h-5 w-5 rounded-full bg-white dark:bg-zinc-900 shadow transition-transform duration-300 ${checked ? "translate-x-5" : "translate-x-0"
-              }`}
+            className={`block h-5 w-5 rounded-full bg-white dark:bg-zinc-900 shadow transition-transform duration-300 ${
+              checked ? "translate-x-5" : "translate-x-0"
+            }`}
           />
         </span>
       </div>
@@ -52,7 +70,10 @@ function FieldReadonly({ field }) {
         <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
           {field.label}
         </p>
-        <RichTextReadonly html={field.value} className="bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800" />
+        <RichTextReadonly
+          html={field.value}
+          className="bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800"
+        />
       </div>
     );
   }
@@ -69,14 +90,120 @@ function FieldReadonly({ field }) {
   );
 }
 
+// ─── Sortable draggable field row (edit mode) ─────────────────────────────────
+function SortableFieldRow({ fv, sectionId, currentValue, onUpdate }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: fv.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : "auto",
+  };
+
+  const renderInput = () => {
+    if (fv.field_type === "checkbox") {
+      return (
+        <div className="flex items-center justify-between gap-3 py-3 flex-1">
+          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            {fv.label}
+          </span>
+          <input
+            type="checkbox"
+            checked={String(currentValue).toLowerCase() === "true"}
+            onChange={(e) => onUpdate(sectionId, fv.id, e.target.checked ? "true" : "false")}
+            className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-600"
+          />
+        </div>
+      );
+    }
+    if (fv.field_type === "textarea") {
+      return (
+        <div className="space-y-2 py-2 flex-1">
+          <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            {fv.label}
+          </p>
+          <textarea
+            rows={3}
+            value={currentValue}
+            onChange={(e) => onUpdate(sectionId, fv.id, e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+          />
+        </div>
+      );
+    }
+    if (fv.field_type === "richtext") {
+      return (
+        <div className="space-y-2 py-2 flex-1">
+          <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            {fv.label}
+          </p>
+          <RichTextEditor
+            content={currentValue}
+            onChange={(val) => onUpdate(sectionId, fv.id, val)}
+            placeholder={`Enter ${fv.label.toLowerCase()}...`}
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1 py-1 flex-1">
+        <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {fv.label}
+        </p>
+        <input
+          type="text"
+          value={currentValue}
+          onChange={(e) => onUpdate(sectionId, fv.id, e.target.value)}
+          className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+        />
+      </div>
+    );
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-start gap-2 group rounded-xl transition-colors ${
+        isDragging
+          ? "bg-zinc-100/80 dark:bg-zinc-800/80 shadow-md ring-1 ring-zinc-300 dark:ring-zinc-600"
+          : "hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30"
+      }`}
+    >
+      {/* Drag handle */}
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="mt-3 flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-zinc-500 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+        title="Drag to reorder"
+        aria-label="Drag to reorder field"
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+
+      {renderInput()}
+    </div>
+  );
+}
+
+// ─── Animation variants ────────────────────────────────────────────────────────
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
 function toDatetimeLocalValue(input) {
@@ -87,25 +214,32 @@ function toDatetimeLocalValue(input) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const initialState = useMemo(() => ({
-    date: toDatetimeLocalValue(detail.date),
-    content: detail.content ?? "",
-    sections: (detail.sections ?? []).map((section) => ({
+
+  const buildInitialState = (det) => ({
+    date: toDatetimeLocalValue(det.date),
+    content: det.content ?? "",
+    sections: (det.sections ?? []).map((section) => ({
       id: section.id,
       name: section.name ?? "",
+      // field_values holds ordered list; each item has id, value, label, field_type
       field_values: (section.field_values ?? []).map((field) => ({
         id: field.id,
+        label: field.label,
+        field_type: field.field_type,
         value: field.value ?? "",
       })),
     })),
-  }), [detail]);
+  });
+
+  const initialState = useMemo(() => buildInitialState(detail), [detail]);
   const [draft, setDraft] = useState(initialState);
 
   const startEditing = () => {
-    setDraft(initialState);
+    setDraft(buildInitialState(detail));
     setIsEditing(true);
   };
 
@@ -113,15 +247,17 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
     setDraft(initialState);
     setIsEditing(false);
   };
+
   const handleDelete = () => {
     if (
       typeof window !== "undefined" &&
       window.confirm("Delete this journal entry? This cannot be undone.")
     ) {
-      notify.promise(
-        Promise.resolve(onDelete(detail.id)),
-        { loading: "Deleting…", success: "Journal deleted", error: "Failed to delete" }
-      );
+      notify.promise(Promise.resolve(onDelete(detail.id)), {
+        loading: "Deleting…",
+        success: "Journal deleted",
+        error: "Failed to delete",
+      });
     }
   };
 
@@ -141,12 +277,31 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
         section.id !== sectionId
           ? section
           : {
-            ...section,
-            field_values: section.field_values.map((field) =>
-              field.id === fieldId ? { ...field, value } : field
-            ),
-          }
+              ...section,
+              field_values: section.field_values.map((field) =>
+                field.id === fieldId ? { ...field, value } : field
+              ),
+            }
       ),
+    }));
+  };
+
+  // Called when a drag ends inside a specific section
+  const handleDragEnd = (sectionId, event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) => {
+        if (section.id !== sectionId) return section;
+        const oldIndex = section.field_values.findIndex((f) => f.id === active.id);
+        const newIndex = section.field_values.findIndex((f) => f.id === over.id);
+        return {
+          ...section,
+          field_values: arrayMove(section.field_values, oldIndex, newIndex),
+        };
+      }),
     }));
   };
 
@@ -154,18 +309,22 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
     if (!onSave) return;
     try {
       setIsSaving(true);
+
       await onSave(detail.id, {
         date: draft.date ? `${draft.date}:00` : null,
         content: draft.content,
         sections: draft.sections.map((s) => ({
-            uuid: s.id,
-            name: s.name,
-            field_values: s.field_values.map((fv) => ({
-                uuid: fv.id,
-                value: fv.value
-            }))
+          uuid: s.id,
+          name: s.name,
+          // Send each field's current position as `order`
+          field_values: s.field_values.map((fv, index) => ({
+            uuid: fv.id,
+            value: fv.value,
+            order: index,
+          })),
         })),
       });
+
       setIsEditing(false);
       notify.success("Journal updated");
     } catch (error) {
@@ -176,11 +335,16 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
     }
   };
 
-  // Calculate word count
+  // Word count (stripped of HTML tags)
   const wordCount = useMemo(() => {
     const raw = detail.content ? detail.content.replace(/<[^>]*>?/gm, " ").trim() : "";
     return raw ? raw.split(/\s+/).filter(Boolean).length : 0;
   }, [detail.content]);
+
+  // dnd-kit sensors (pointer with 5px activation distance to avoid accidental drags)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   return (
     <motion.div
@@ -189,6 +353,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
       animate="show"
       className="space-y-6 pb-20"
     >
+      {/* ── Top action bar ───────────────────────────────────────────────── */}
       <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
@@ -198,6 +363,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
           <ArrowLeft className="w-4 h-4" />
           Back to list
         </button>
+
         <div className="flex items-center gap-2">
           {isEditing ? (
             <>
@@ -230,6 +396,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
               Edit
             </button>
           )}
+
           <button
             type="button"
             onClick={handleDelete}
@@ -241,6 +408,7 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
         </div>
       </motion.div>
 
+      {/* ── Header / date ────────────────────────────────────────────────── */}
       <motion.header variants={itemVariants} className="space-y-2 py-2">
         <div className="flex items-center gap-3">
           {isEditing ? (
@@ -269,8 +437,12 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
         </h2>
       </motion.header>
 
+      {/* ── Free-text content ─────────────────────────────────────────────── */}
       {(detail.content || isEditing) && (
-        <motion.section variants={itemVariants} className="rounded-3xl border border-zinc-200/80 bg-white/80 backdrop-blur-md p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950/80">
+        <motion.section
+          variants={itemVariants}
+          className="rounded-3xl border border-zinc-200/80 bg-white/80 backdrop-blur-md p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950/80"
+        >
           <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-4">
             Content
           </h3>
@@ -286,89 +458,79 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
         </motion.section>
       )}
 
+      {/* ── Structured sections ───────────────────────────────────────────── */}
       {detail.sections?.length > 0 && (
         <motion.div variants={itemVariants} className="space-y-4 pt-2">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-2">
-            Structured Sections
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+              Structured Sections
+            </h3>
+            {isEditing && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 uppercase tracking-wider">
+                Drag to reorder fields
+              </span>
+            )}
+          </div>
+
           <div className="grid gap-4">
-            {detail.sections.map((section) => (
-              <article
-                key={section.id}
-                className="rounded-3xl border border-zinc-200/80 bg-white/80 backdrop-blur-md p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950/80"
-              >
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={draft.sections.find((s) => s.id === section.id)?.name ?? ""}
-                    onChange={(e) => updateSectionName(section.id, e.target.value)}
-                    className="mb-3 w-full border-b border-zinc-200 bg-transparent pb-2 text-lg font-bold text-zinc-900 outline-none dark:border-zinc-700 dark:text-zinc-50"
-                  />
-                ) : (
-                  <h4 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 pb-2 border-b border-zinc-100 dark:border-zinc-800/50 mb-3">
-                    {section.name}
-                  </h4>
-                )}
-                <div className="flex flex-col gap-2 divide-y divide-zinc-100 dark:divide-zinc-800/50">
-                  {section.field_values?.map((fv) => {
-                    if (!isEditing) {
-                      return <FieldReadonly key={fv.id} field={fv} />;
-                    }
-                    const currentSection = draft.sections.find((s) => s.id === section.id);
-                    const currentValue = currentSection?.field_values.find((f) => f.id === fv.id)?.value ?? "";
-                    if (fv.field_type === "checkbox") {
-                      return (
-                        <div key={fv.id} className="flex items-center justify-between gap-3 py-3">
-                          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{fv.label}</span>
-                          <input
-                            type="checkbox"
-                            checked={String(currentValue).toLowerCase() === "true"}
-                            onChange={(e) => updateFieldValue(section.id, fv.id, e.target.checked ? "true" : "false")}
-                            className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-600"
-                          />
+            {detail.sections.map((section) => {
+              const draftSection = draft.sections.find((s) => s.id === section.id);
+
+              return (
+                <article
+                  key={section.id}
+                  className="rounded-3xl border border-zinc-200/80 bg-white/80 backdrop-blur-md p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950/80"
+                >
+                  {/* Section name */}
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={draftSection?.name ?? ""}
+                      onChange={(e) => updateSectionName(section.id, e.target.value)}
+                      className="mb-4 w-full border-b border-zinc-200 bg-transparent pb-2 text-lg font-bold text-zinc-900 outline-none dark:border-zinc-700 dark:text-zinc-50"
+                    />
+                  ) : (
+                    <h4 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 pb-2 border-b border-zinc-100 dark:border-zinc-800/50 mb-3">
+                      {section.name}
+                    </h4>
+                  )}
+
+                  {/* Fields */}
+                  {isEditing && draftSection ? (
+                    // ── Drag-and-drop zone ──────────────────────────────────
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(event) => handleDragEnd(section.id, event)}
+                    >
+                      <SortableContext
+                        items={draftSection.field_values.map((f) => f.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                          {draftSection.field_values.map((fv) => (
+                            <SortableFieldRow
+                              key={fv.id}
+                              fv={fv}
+                              sectionId={section.id}
+                              currentValue={fv.value}
+                              onUpdate={updateFieldValue}
+                            />
+                          ))}
                         </div>
-                      );
-                    }
-                    if (fv.field_type === "textarea") {
-                      return (
-                        <div key={fv.id} className="space-y-2 py-2">
-                          <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{fv.label}</p>
-                          <textarea
-                            rows={3}
-                            value={currentValue}
-                            onChange={(e) => updateFieldValue(section.id, fv.id, e.target.value)}
-                            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-                          />
-                        </div>
-                      );
-                    }
-                    if (fv.field_type === "richtext") {
-                      return (
-                        <div key={fv.id} className="space-y-2 py-2">
-                          <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{fv.label}</p>
-                          <RichTextEditor
-                            content={currentValue}
-                            onChange={(val) => updateFieldValue(section.id, fv.id, val)}
-                            placeholder={`Enter ${fv.label.toLowerCase()}...`}
-                          />
-                        </div>
-                      );
-                    }
-                    return (
-                      <div key={fv.id} className="space-y-1 py-1">
-                        <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{fv.label}</p>
-                        <input
-                          type="text"
-                          value={currentValue}
-                          onChange={(e) => updateFieldValue(section.id, fv.id, e.target.value)}
-                          className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </article>
-            ))}
+                      </SortableContext>
+                    </DndContext>
+                  ) : (
+                    // ── Read-only ───────────────────────────────────────────
+                    <div className="flex flex-col gap-2 divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                      {section.field_values?.map((fv) => (
+                        <FieldReadonly key={fv.id} field={fv} />
+                      ))}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
           </div>
         </motion.div>
       )}
