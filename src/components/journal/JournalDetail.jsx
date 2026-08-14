@@ -6,6 +6,7 @@ import { ArrowLeft, GripVertical, Pencil, Save, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { notify } from "@/lib/notify";
 import RichTextEditor, { RichTextReadonly } from "@/components/ui/RichTextEditor";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 import {
   DndContext,
@@ -218,6 +219,8 @@ function toDatetimeLocalValue(input) {
 export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const buildInitialState = (det) => ({
     date: toDatetimeLocalValue(det.date),
@@ -248,16 +251,16 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
     setIsEditing(false);
   };
 
-  const handleDelete = () => {
-    if (
-      typeof window !== "undefined" &&
-      window.confirm("Delete this journal entry? This cannot be undone.")
-    ) {
-      notify.promise(Promise.resolve(onDelete(detail.id)), {
-        loading: "Deleting…",
-        success: "Journal deleted",
-        error: "Failed to delete",
-      });
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete(detail.id);
+      notify.success("Journal deleted");
+    } catch (err) {
+      notify.error("Failed to delete journal");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -387,24 +390,25 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={startEditing}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 active:scale-95"
-            >
-              <Pencil className="w-4 h-4" />
-              Edit
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={startEditing}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 active:scale-95 shadow-2xs"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200/80 bg-red-50/60 px-4 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50 active:scale-95 shadow-2xs"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            </>
           )}
-
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200/80 bg-red-50/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50 active:scale-95"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
         </div>
       </motion.div>
 
@@ -534,6 +538,18 @@ export default function JournalDetail({ detail, onBack, onDelete, onSave }) {
           </div>
         </motion.div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Journal Entry?"
+        description="Are you sure you want to delete this journal entry? This action cannot be undone."
+        confirmLabel="Delete Journal"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </motion.div>
   );
 }

@@ -56,7 +56,7 @@ export default function OtpInput({ value = "", onChange, length = 6 }) {
     };
 
     return (
-        <div className="flex justify-between gap-2 pt-2">
+        <div className="flex justify-center gap-1.5 sm:gap-2 pt-2 w-full">
             {otpArray.map((digit, index) => (
                 <input
                     key={index}
@@ -66,7 +66,7 @@ export default function OtpInput({ value = "", onChange, length = 6 }) {
                     onChange={(e) => handleInputChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
                     onPaste={handlePaste}
-                    className="w-12 h-12 text-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-lg font-bold text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100 outline-none transition"
+                    className="w-full max-w-[3rem] aspect-square text-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20 text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100 focus:bg-white dark:focus:bg-zinc-950 outline-none transition"
                 />
             ))}
         </div>

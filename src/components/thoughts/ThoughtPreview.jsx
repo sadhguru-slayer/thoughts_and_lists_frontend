@@ -48,19 +48,27 @@ export default function ThoughtPreview({ thought, onClose }) {
     }, [thought?.id, thought?.uuid, fetchThoughtById]);
 
     const displayThought = fullThought || thought;
+    const targetId = displayThought.uuid || displayThought.id || thought.uuid || thought.id;
 
     const handleDelete = async () => {
-        const targetId = displayThought.uuid || displayThought.id || thought.uuid || thought.id;
         await deleteThought(targetId);
         onClose();
     };
 
     const handleEdit = () => {
-        const targetId = displayThought.uuid || displayThought.id || thought.uuid || thought.id;
-        if (targetId) {
-            // Directly push to the note edit page without triggering query clear
-            router.push(`/thoughts/${targetId}`);
-        }
+        if (targetId) router.push(`/thoughts/${targetId}`);
+    };
+
+    const handleToggleStar = () => {
+        const current = displayThought.is_starred;
+        setFullThought(prev => ({ ...(prev || thought), is_starred: !current }));
+        toggleStar(targetId, current);
+    };
+
+    const handleTogglePin = () => {
+        const current = displayThought.is_pinned;
+        setFullThought(prev => ({ ...(prev || thought), is_pinned: !current }));
+        togglePin(targetId, current);
     };
 
     return (
@@ -104,7 +112,7 @@ export default function ThoughtPreview({ thought, onClose }) {
                             <div className="flex items-center gap-1.5 shrink-0">
                                 <button
                                     type="button"
-                                    onClick={() => toggleStar(displayThought.uuid || displayThought.id, displayThought.is_starred)}
+                                    onClick={handleToggleStar}
                                     className={cn("p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors", displayThought.is_starred ? "text-amber-500" : "text-zinc-400")}
                                     title={displayThought.is_starred ? "Unstar note" : "Star note"}
                                 >
@@ -112,7 +120,7 @@ export default function ThoughtPreview({ thought, onClose }) {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => togglePin(displayThought.uuid || displayThought.id, displayThought.is_pinned)}
+                                    onClick={handleTogglePin}
                                     className={cn("p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors", displayThought.is_pinned ? "text-blue-500" : "text-zinc-400")}
                                     title={displayThought.is_pinned ? "Unpin note" : "Pin note"}
                                 >
@@ -173,23 +181,52 @@ export default function ThoughtPreview({ thought, onClose }) {
                             `}</style>
                         </div>
 
-                        {/* Footer Action Buttons */}
-                        <div className="flex gap-2 px-5 py-3 border-t border-zinc-100 dark:border-zinc-800/80 shrink-0">
+                        {/* Footer Action Bar: Full 4-button mobile-friendly controls */}
+                        <div className="grid grid-cols-4 gap-2 px-5 py-3 border-t border-zinc-100 dark:border-zinc-800/80 shrink-0">
+                            <button
+                                type="button"
+                                onClick={handleToggleStar}
+                                className={cn(
+                                    "flex flex-col sm:flex-row items-center justify-center gap-1 rounded-xl border py-2 text-[11px] font-semibold transition-all active:scale-95",
+                                    displayThought.is_starred
+                                        ? "border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400"
+                                        : "border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                )}
+                            >
+                                <Star className="w-3.5 h-3.5" fill={displayThought.is_starred ? "currentColor" : "none"} />
+                                <span>{displayThought.is_starred ? "Starred" : "Star"}</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleTogglePin}
+                                className={cn(
+                                    "flex flex-col sm:flex-row items-center justify-center gap-1 rounded-xl border py-2 text-[11px] font-semibold transition-all active:scale-95",
+                                    displayThought.is_pinned
+                                        ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-400"
+                                        : "border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                )}
+                            >
+                                <Pin className="w-3.5 h-3.5" fill={displayThought.is_pinned ? "currentColor" : "none"} />
+                                <span>{displayThought.is_pinned ? "Pinned" : "Pin"}</span>
+                            </button>
+
                             <button
                                 onClick={handleEdit}
                                 disabled={loading}
-                                className="flex items-center gap-2 flex-1 justify-center rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold py-2.5 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-2xs"
+                                className="flex flex-col sm:flex-row items-center justify-center gap-1 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[11px] font-semibold py-2 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 shadow-2xs"
                             >
                                 <Edit2 className="w-3.5 h-3.5" />
-                                Edit Note
+                                <span>Edit</span>
                             </button>
+
                             <button
                                 onClick={handleDelete}
                                 disabled={loading}
-                                className="flex items-center gap-2 flex-1 justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-red-600 dark:text-red-400 py-2.5 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-[0.98] disabled:opacity-50"
+                                className="flex flex-col sm:flex-row items-center justify-center gap-1 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[11px] font-semibold text-red-600 dark:text-red-400 py-2 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-95 disabled:opacity-50"
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
-                                Delete Note
+                                <span>Delete</span>
                             </button>
                         </div>
                     </motion.div>

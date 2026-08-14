@@ -60,7 +60,7 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
                     : "border-zinc-200/80 bg-white hover:border-zinc-300 hover:shadow-xs dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-zinc-700"
             )}
         >
-            {/* Top Bar Checkbox & Actions */}
+            {/* Top Bar Checkbox & Star/Pin Action Toggles */}
             <div className="flex items-center justify-between gap-2">
                 <div
                     onClick={handleCheckbox}
@@ -68,7 +68,7 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
                         "transition-all shrink-0",
                         isSelectMode
                             ? "opacity-100 pointer-events-auto"
-                            : "opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+                            : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 pointer-events-auto"
                     )}
                 >
                     <div
@@ -87,25 +87,27 @@ export default function ThoughtCard({ thought, isSelected, onSelect, onOpen, isS
                     </div>
                 </div>
 
-                {/* Star & Pin Action Toggles */}
+                {/* Star & Pin Action Toggles: Always visible on mobile, hover-revealed on desktop unless active */}
                 <div className={cn(
                     "flex items-center gap-1 transition-opacity ml-auto",
-                    (thought.is_pinned || thought.is_starred || isSelectMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    (thought.is_pinned || thought.is_starred || isSelectMode)
+                        ? "opacity-100"
+                        : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 )}>
                     {!isSelectMode && (
                         <>
                             <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); toggleStar(thought.id, thought.is_starred); }}
-                                className={cn("p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors", thought.is_starred ? "text-amber-500" : "text-zinc-400")}
+                                onClick={(e) => { e.stopPropagation(); toggleStar(thought.id || thought.uuid, thought.is_starred); }}
+                                className={cn("p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors touch-manipulation", thought.is_starred ? "text-amber-500" : "text-zinc-400")}
                                 title={thought.is_starred ? "Unstar note" : "Star note"}
                             >
                                 <Star className="w-3.5 h-3.5" fill={thought.is_starred ? "currentColor" : "none"} />
                             </button>
                             <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); togglePin(thought.id, thought.is_pinned); }}
-                                className={cn("p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors", thought.is_pinned ? "text-blue-500" : "text-zinc-400")}
+                                onClick={(e) => { e.stopPropagation(); togglePin(thought.id || thought.uuid, thought.is_pinned); }}
+                                className={cn("p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors touch-manipulation", thought.is_pinned ? "text-blue-500" : "text-zinc-400")}
                                 title={thought.is_pinned ? "Unpin note" : "Pin note"}
                             >
                                 <Pin className="w-3.5 h-3.5" fill={thought.is_pinned ? "currentColor" : "none"} />
