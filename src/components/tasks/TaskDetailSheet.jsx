@@ -46,7 +46,6 @@ export default function TaskDetailSheet({ task, onClose }) {
     const [recurrence, setRecurrence] = useState("NONE");
 
     const handleClose = () => {
-        console.log("[TaskDetailSheet] handleClose triggered for task:", task?.id);
         onClose();
     };
 
@@ -62,7 +61,6 @@ export default function TaskDetailSheet({ task, onClose }) {
     }, []);
 
     useEffect(() => {
-        console.log("[TaskDetailSheet] Opening/loading sheet for task ID:", task?.id);
         if (!task?.id) return;
 
         let cancelled = false;

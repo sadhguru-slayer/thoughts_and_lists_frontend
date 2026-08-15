@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, Suspense } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader2, Search, ListTodo } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -30,57 +30,42 @@ function TasksPageInner() {
     const [searchInput, setSearchInput] = useState(filters.search || "");
     const searchParams = useSearchParams();
     const router = useRouter();
-    const closedTaskIdRef = useRef(null);
 
-    // Auto-open task from URL ?task=id
+    // Auto-open task from URL ?task=id on initial load / navigation
     useEffect(() => {
         const taskId = searchParams.get("task");
-        console.log("[TasksPage] useEffect auto-open check | 'task' param:", taskId, "| current selectedTask:", selectedTask?.id, "| closedRef:", closedTaskIdRef.current);
-        if (!taskId) {
-            setSelectedTask(null);
-            closedTaskIdRef.current = null;
-            return;
-        }
-        if (closedTaskIdRef.current && String(closedTaskIdRef.current) === String(taskId)) {
-            console.log("[TasksPage] Skipping auto-open: task was explicitly closed by user:", taskId);
-            return;
-        }
-        if (selectedTask && String(selectedTask.id) === String(taskId)) {
-            return;
-        }
+        if (!taskId) return;
+
         const found = tasks.find((t) => String(t.id) === String(taskId));
         if (found) {
-            console.log("[TasksPage] Found task in list, setting selectedTask:", found.id);
             setSelectedTask(found);
         } else if (!loading) {
-            console.log("[TasksPage] Task not in memory list, fetching by ID:", taskId);
             fetchTaskById(taskId)
                 .then((data) => { if (data) setSelectedTask(data); })
-                .catch((err) => { console.error("[TasksPage] fetchTaskById failed:", err); });
+                .catch(() => {});
         }
-    }, [searchParams, tasks, loading, fetchTaskById, selectedTask]);
+    }, [searchParams, tasks, loading, fetchTaskById]);
 
     const handleOpen = useCallback((task) => {
-        console.log("[TasksPage] handleOpen called for task:", task?.id);
-        closedTaskIdRef.current = null;
         setSelectedTask(task);
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("task", task.id);
-        router.push(`?${params.toString()}`, { scroll: false });
-    }, [router, searchParams]);
+        if (typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            url.searchParams.set("task", task.id);
+            window.history.pushState(null, "", url.toString());
+        }
+    }, []);
 
     const handleClose = useCallback(() => {
-        const taskId = searchParams.get("task") || selectedTask?.id;
-        console.log("[TasksPage] handleClose called for task:", taskId);
-        if (taskId) {
-            closedTaskIdRef.current = String(taskId);
-        }
         setSelectedTask(null);
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("task");
-        const query = params.toString();
-        router.replace(query ? `?${query}` : "/tasks", { scroll: false });
-    }, [router, searchParams, selectedTask]);
+        if (typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("task");
+            const newUrl = url.searchParams.toString()
+                ? `${url.pathname}?${url.searchParams.toString()}`
+                : url.pathname;
+            window.history.replaceState(null, "", newUrl);
+        }
+    }, []);
 
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";
