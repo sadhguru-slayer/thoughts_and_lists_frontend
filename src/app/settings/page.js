@@ -87,8 +87,10 @@ export default function SettingsPage() {
         if (!user?.email) return;
         try {
             await requestPasswordReset(user.email);
-            notify.success("OTP sent", "Check your inbox then log back in.");
-            logout();
+            notify.success("OTP sent", "Check your inbox to complete the reset.");
+            // Redirect to forgot-password page with email pre-filled at OTP step.
+            // The user stays logged in; the reset flow uses a short-lived reset token.
+            router.push(`/forgot-password?email=${encodeURIComponent(user.email)}&step=otp`);
         } catch (err) {
             notify.error("Failed to send reset OTP");
         }
@@ -169,7 +171,7 @@ export default function SettingsPage() {
             <SectionCard icon={ShieldCheck} title="Account security">
                 <div>
                     <p className="text-xs leading-relaxed text-zinc-600 dark:text-zinc-400 mb-4">
-                        To change your password, request a reset OTP — you'll be logged out immediately.
+                        To change your password, request a reset code — we'll send an OTP to your inbox.
                     </p>
                     <button
                         onClick={handlePasswordReset}

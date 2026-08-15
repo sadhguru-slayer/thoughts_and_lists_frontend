@@ -53,7 +53,7 @@ function groupJournalsByMonth(journals) {
 }
 
 export default function JournalList({ journals = [], viewMode = "timeline" }) {
-  const { handleDelete } = useJournal();
+  const { handleDelete, loading } = useJournal();
   const [deletingId, setDeletingId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -76,6 +76,34 @@ export default function JournalList({ journals = [], viewMode = "timeline" }) {
       setDeletingId(null);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="flex items-center justify-between pb-2 border-b border-zinc-200/80 dark:border-zinc-800/80">
+          <div className="h-3.5 w-32 bg-zinc-200 dark:bg-zinc-800 rounded-md" />
+          <div className="h-3 w-16 bg-zinc-200 dark:bg-zinc-800 rounded-md" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/60"
+            >
+              <div className="flex items-center gap-3.5 flex-1">
+                <div className="w-12 h-12 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+                <div className="space-y-2 flex-1 max-w-md">
+                  <div className="h-3.5 w-48 bg-zinc-200 dark:bg-zinc-800 rounded-md" />
+                  <div className="h-3 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded-md" />
+                </div>
+              </div>
+              <div className="h-4 w-12 bg-zinc-200 dark:bg-zinc-800 rounded-md shrink-0" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (journals.length === 0) {
     return (

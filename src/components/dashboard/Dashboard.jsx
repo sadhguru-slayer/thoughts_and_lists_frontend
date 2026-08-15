@@ -7,7 +7,7 @@ import {
     Loader2, PenLine, ArrowRight,
     StickyNote, BookOpen, ListTodo, Flame,
     CheckCircle2, Plus, Check, Pin, Star,
-    Circle, NotebookPen
+    Circle, NotebookPen, ChevronDown
 } from "lucide-react";
 import { stripHtml } from "@/lib/utils";
 
@@ -277,6 +277,7 @@ function PinnedNotes({ notes }) {
 export default function Dashboard() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showStats, setShowStats] = useState(true);
 
     useEffect(() => {
         let isMounted = true;
@@ -320,21 +321,34 @@ export default function Dashboard() {
             </div>
 
             {/* ── Metric tiles ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {[
-                    { icon: CheckCircle2, value: `${stats.completed_tasks}/${stats.total_tasks}`, label: "Tasks done" },
-                    { icon: StickyNote, value: stats.total_thoughts, label: "Notes" },
-                    { icon: BookOpen, value: stats.total_journals, label: "Journals" },
-                    { icon: Flame, value: `${stats.current_streak}d`, label: "Streak" },
-                ].map(({ icon: Icon, value, label }) => (
-                    <div key={label} className="bg-white dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-3 flex items-center gap-2.5 shadow-2xs">
-                        <Icon className="w-4 h-4 text-zinc-400 dark:text-zinc-500 shrink-0" />
-                        <div className="min-w-0">
-                            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 block truncate leading-tight">{value}</span>
-                            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block truncate">{label}</span>
-                        </div>
+            <div>
+                <div className="flex items-center justify-between mb-2.5">
+                    <button
+                        onClick={() => setShowStats(s => !s)}
+                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                    >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showStats ? "" : "-rotate-90"}`} />
+                        {showStats ? "Hide Stats" : "Show Stats"}
+                    </button>
+                </div>
+                {showStats && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {[
+                            { icon: CheckCircle2, value: `${stats.completed_tasks}/${stats.total_tasks}`, label: "Tasks done" },
+                            { icon: StickyNote, value: stats.total_thoughts, label: "Notes" },
+                            { icon: BookOpen, value: stats.total_journals, label: "Journals" },
+                            { icon: Flame, value: `${stats.current_streak}d`, label: "Streak" },
+                        ].map(({ icon: Icon, value, label }) => (
+                            <div key={label} className="bg-white dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-3 flex items-center gap-2.5 shadow-2xs">
+                                <Icon className="w-4 h-4 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                                <div className="min-w-0">
+                                    <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 block truncate leading-tight">{value}</span>
+                                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block truncate">{label}</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                ))}
+                )}
             </div>
 
             {/* ── Main row: Today/Focus (2/3) + Quick Capture (1/3) ── */}

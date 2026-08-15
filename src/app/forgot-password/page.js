@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -12,8 +12,13 @@ import OtpInput from "@/components/ui/OtpInput";
 export default function ForgotPasswordPage() {
     const { requestPasswordReset, verifyResetOtp, resetPassword } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
-    const [email, setEmail] = useState("");
+    // Support being redirected here from the settings page with ?email=...&step=otp
+    const prefillEmail = searchParams.get("email") || "";
+    const prefillStep = searchParams.get("step") || "email";
+
+    const [email, setEmail] = useState(prefillEmail);
     const [otp, setOtp] = useState("");
     const [resetToken, setResetToken] = useState(null);
     const [newPassword, setNewPassword] = useState("");
@@ -27,7 +32,7 @@ export default function ForgotPasswordPage() {
     const [done, setDone] = useState(false);
 
     // step 'email' | 'otp' | 'password'
-    const [step, setStep] = useState("email");
+    const [step, setStep] = useState(prefillStep === "otp" && prefillEmail ? "otp" : "email");
 
     const getErrorMsg = (err, fallback) => {
         const detail = err.response?.data?.detail;

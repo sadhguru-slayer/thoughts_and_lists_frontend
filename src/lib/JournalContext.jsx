@@ -13,6 +13,7 @@ export function JournalProvider({ children }) {
     const [analytics, setAnalytics] = useState(null);
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
     const [latestStructure, setLatestStructure] = useState({ sections: [] });
 
     const fetchLatestStructure = async () => {
@@ -48,11 +49,23 @@ export function JournalProvider({ children }) {
     const [page, setPage] = useState(1);
     const [perPage] = useState(10);
     const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortOrder, setSortOrder] = useState("desc");       // "asc" | "desc"
+    const [dateFilter, setDateFilter] = useState("all");      // "all" | "this_month" | "this_year"
 
-    const fetchJournals = useCallback(async (targetPage = page) => {
+    const fetchJournals = useCallback(async (
+        targetPage = page,
+        search = searchQuery,
+        sort = sortOrder,
+        filter = dateFilter,
+    ) => {
         try {
             setLoading(true);
-            const res = await api.get(`/api/v1/journals?page=${targetPage}&per_page=${perPage}`);
+            const params = new URLSearchParams({ page: targetPage, per_page: perPage });
+            if (search && search.trim()) params.set("search", search.trim());
+            if (sort) params.set("sort_order", sort);
+            if (filter && filter !== "all") params.set("date_filter", filter);
+            const res = await api.get(`/api/v1/journals?${params.toString()}`);
             if (res.data && res.data.items) {
                 const mapped = res.data.items.map(j => ({ ...j, id: j.uuid || j.id }));
                 setJournals(mapped);
@@ -70,19 +83,40 @@ export function JournalProvider({ children }) {
         } finally {
             setLoading(false);
         }
-    }, [page, perPage]);
+    }, [page, perPage, searchQuery, sortOrder, dateFilter]);
 
     const changePage = (newPage) => {
         setPage(newPage);
-        fetchJournals(newPage);
+        fetchJournals(newPage, searchQuery, sortOrder, dateFilter);
+    };
+
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+        setPage(1);
+        fetchJournals(1, query, sortOrder, dateFilter);
+    };
+
+    const handleSortChange = (sort) => {
+        setSortOrder(sort);
+        setPage(1);
+        fetchJournals(1, searchQuery, sort, dateFilter);
+    };
+
+    const handleDateFilterChange = (filter) => {
+        setDateFilter(filter);
+        setPage(1);
+        fetchJournals(1, searchQuery, sortOrder, filter);
     };
 
     const fetchAnalytics = async () => {
         try {
+            setAnalyticsLoading(true);
             const res = await api.get("/api/v1/journal/analytics");
             setAnalytics(res.data);
         } catch (err) {
             console.error("Failed to fetch analytics:", err);
+        } finally {
+            setAnalyticsLoading(false);
         }
     };
 
@@ -147,8 +181,7 @@ export function JournalProvider({ children }) {
             const res = await api.post("/api/v1/journal", payload);
             const newJournal = res.data;
             if (newJournal.uuid) newJournal.id = newJournal.uuid;
-            setJournals((prev) => [newJournal, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)));
-            // Also fetch templates again in case they saved a reusable section
+            await fetchJournals();
             fetchTemplates();
             fetchAnalytics();
             fetchLatestStructure();
@@ -157,22 +190,22 @@ export function JournalProvider({ children }) {
             console.error("Failed to create journal:", err);
             throw err; // Let caller Handle errors
         }
-    }, []);
+    }, [fetchJournals]);
 
     const handleDelete = useCallback(async (id) => {
         try {
             await api.delete(`/api/v1/journal/${id}`);
-            setJournals((prev) => prev.filter((j) => j.id !== id));
             setDetailById((prev) => {
                 const next = { ...prev };
                 delete next[id];
                 return next;
             });
+            await fetchJournals();
             fetchAnalytics();
         } catch (err) {
             console.error("Failed to delete journal:", err);
         }
-    }, []);
+    }, [fetchJournals]);
 
     const handleDeleteTemplate = useCallback(async (templateId) => {
         try {
@@ -204,11 +237,18 @@ export function JournalProvider({ children }) {
             detailById,
             templates,
             analytics,
+            analyticsLoading,
             latestJournalStructure: latestStructure,
             loading,
             page,
             perPage,
             pagination,
+            searchQuery,
+            sortOrder,
+            dateFilter,
+            handleSearch,
+            handleSortChange,
+            handleDateFilterChange,
             changePage,
             loadJournalDetail,
             handleCreateSubmit,
@@ -223,11 +263,15 @@ export function JournalProvider({ children }) {
             detailById,
             templates,
             analytics,
+            analyticsLoading,
             latestStructure,
             loading,
             page,
             perPage,
             pagination,
+            searchQuery,
+            sortOrder,
+            dateFilter,
             loadJournalDetail,
             handleCreateSubmit,
             handleDelete,

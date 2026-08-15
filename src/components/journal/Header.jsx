@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, Plus, Settings, LogOut } from "lucide-react";
+import { Moon, Sun, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
@@ -28,7 +28,7 @@ function isJournalActive(pathname) {
 export default function Header() {
     const pathname = usePathname();
     const { theme, setTheme, resolvedTheme } = useTheme();
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -122,17 +122,6 @@ export default function Header() {
                         )}
                     </button>
 
-                    {isJournal && !isCreate && user && (
-                        <Link
-                            href="/journals/write"
-                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 transition-all active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 ml-1"
-                        >
-                            <Plus className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">New journal</span>
-                            <span className="sm:hidden">New</span>
-                        </Link>
-                    )}
-
                     {user && (
                         <Link
                             href="/settings"
@@ -148,16 +137,6 @@ export default function Header() {
                         </Link>
                     )}
 
-                    {user && (
-                        <button
-                            onClick={logout}
-                            className="hidden sm:block p-2 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                            aria-label="Log out"
-                            title="Log out"
-                        >
-                            <LogOut className="h-4 w-4" />
-                        </button>
-                    )}
                 </div>
             </div>
 

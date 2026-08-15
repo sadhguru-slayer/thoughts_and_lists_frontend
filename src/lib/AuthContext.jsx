@@ -2,8 +2,10 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import api from "./api";
+import axios from "axios";
+import api, { baseURL } from "./api";
 import { useRouter, usePathname } from "next/navigation";
+
 
 const AuthContext = createContext(null);
 
@@ -29,8 +31,8 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         if (!loading) {
-            const guestOnlyRoutes = ["/", "/login", "/register", "/forgot-password"];
-            const publicRoutes = [...guestOnlyRoutes, "/about", "/privacy", "/terms"];
+            const guestOnlyRoutes = ["/login", "/register"];
+            const publicRoutes = [...guestOnlyRoutes, "/", "/forgot-password", "/about", "/privacy", "/terms"];
             
             if (!user && !publicRoutes.includes(pathname)) {
                 // Save the intended destination before redirecting to login
@@ -84,14 +86,18 @@ export function AuthProvider({ children }) {
     };
 
     const verifyResetOtp = async (email, otp) => {
-        const res = await api.post("/api/v1/auth/verify-reset-otp", { email, otp });
+        // Use raw axios (not the interceptor-wrapped api) so a stale access_token
+        // cookie cannot trigger auth-unauthorized → logout during the public reset flow.
+        const res = await axios.post(`${baseURL}/api/v1/auth/verify-reset-otp`, { email, otp });
         return res.data.reset_token;
     };
 
     const resetPassword = async (resetToken, newPassword) => {
-        await api.post(
-            "/api/v1/auth/reset-password",
-            { new_password: newPassword }, // body
+        // Same reason: use raw axios with an explicit Authorization header so the
+        // interceptor cannot intercept and misfire logout on a 403 scope error.
+        await axios.post(
+            `${baseURL}/api/v1/auth/reset-password`,
+            { new_password: newPassword },
             { headers: { Authorization: `Bearer ${resetToken}` } }
         );
     };
