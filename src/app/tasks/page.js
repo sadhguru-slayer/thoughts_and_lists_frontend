@@ -50,25 +50,34 @@ function TasksPageInner() {
         } else if (!loading) {
             fetchTaskById(taskId)
                 .then((data) => { if (data) setSelectedTask(data); })
-                .catch(() => {});
+                .catch(() => { });
         }
     }, [searchParams, tasks, loading, fetchTaskById, selectedTask]);
-
     const handleOpen = useCallback((task) => {
         setSelectedTask(task);
+
         const params = new URLSearchParams(searchParams.toString());
         params.set("task", task.id);
-        window.history.pushState(null, "", `${pathname}?${params.toString()}`);
-    }, [pathname, searchParams]);
 
+        router.push(`${pathname}?${params.toString()}`, {
+            scroll: false,
+        });
+    }, [pathname, searchParams, router]);
     const handleClose = useCallback(() => {
         setSelectedTask(null);
+
         const params = new URLSearchParams(searchParams.toString());
         params.delete("task");
-        const query = params.toString();
-        window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
-    }, [pathname, searchParams]);
 
+        const query = params.toString();
+
+        router.replace(
+            query ? `${pathname}?${query}` : pathname,
+            {
+                scroll: false,
+            }
+        );
+    }, [pathname, searchParams, router]);
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";
         if (isCompleted) {
