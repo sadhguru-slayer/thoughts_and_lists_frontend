@@ -34,7 +34,14 @@ function TasksPageInner() {
     // Auto-open task from URL ?task=id on initial load / navigation
     useEffect(() => {
         const taskId = searchParams.get("task");
-        if (!taskId) return;
+        if (!taskId) {
+            setSelectedTask(null);
+            return;
+        }
+
+        if (selectedTask && String(selectedTask.id) === String(taskId)) {
+            return;
+        }
 
         const found = tasks.find((t) => String(t.id) === String(taskId));
         if (found) {
@@ -44,28 +51,19 @@ function TasksPageInner() {
                 .then((data) => { if (data) setSelectedTask(data); })
                 .catch(() => {});
         }
-    }, [searchParams, tasks, loading, fetchTaskById]);
+    }, [searchParams, tasks, loading, fetchTaskById, selectedTask]);
 
     const handleOpen = useCallback((task) => {
         setSelectedTask(task);
-        if (typeof window !== "undefined") {
-            const url = new URL(window.location.href);
-            url.searchParams.set("task", task.id);
-            window.history.pushState(null, "", url.toString());
-        }
-    }, []);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("task", task.id);
+        router.push(`?${params.toString()}`, { scroll: false });
+    }, [router, searchParams]);
 
     const handleClose = useCallback(() => {
         setSelectedTask(null);
-        if (typeof window !== "undefined") {
-            const url = new URL(window.location.href);
-            url.searchParams.delete("task");
-            const newUrl = url.searchParams.toString()
-                ? `${url.pathname}?${url.searchParams.toString()}`
-                : url.pathname;
-            window.history.replaceState(null, "", newUrl);
-        }
-    }, []);
+        router.replace("/tasks", { scroll: false });
+    }, [router]);
 
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";
