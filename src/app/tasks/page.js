@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader2, Search, ListTodo } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import TaskInput from "@/components/tasks/TaskInput";
 import TaskCard from "@/components/tasks/TaskCard";
 import TaskFilters from "@/components/tasks/TaskFilters";
@@ -29,6 +29,7 @@ function TasksPageInner() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [searchInput, setSearchInput] = useState(filters.search || "");
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const router = useRouter();
 
     // Auto-open task from URL ?task=id on initial load / navigation
@@ -57,13 +58,16 @@ function TasksPageInner() {
         setSelectedTask(task);
         const params = new URLSearchParams(searchParams.toString());
         params.set("task", task.id);
-        router.push(`?${params.toString()}`, { scroll: false });
-    }, [router, searchParams]);
+        window.history.pushState(null, "", `${pathname}?${params.toString()}`);
+    }, [pathname, searchParams]);
 
     const handleClose = useCallback(() => {
         setSelectedTask(null);
-        router.replace("/tasks", { scroll: false });
-    }, [router]);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("task");
+        const query = params.toString();
+        window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
+    }, [pathname, searchParams]);
 
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";

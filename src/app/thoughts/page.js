@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, Suspense, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ThoughtInput from "@/components/thoughts/ThoughtInput";
 import ThoughtCard from "@/components/thoughts/ThoughtCard";
 import ThoughtPreview from "@/components/thoughts/ThoughtPreview";
@@ -19,6 +19,7 @@ function ThoughtsPageInner() {
     const [filterType, setFilterType] = useState("all"); // "all" | "pinned" | "starred"
     const [sortOrder, setSortOrder] = useState("newest"); // "newest" | "oldest" | "title"
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const router = useRouter();
 
     const isSelectMode = selectedIds.length > 0;
@@ -89,6 +90,11 @@ function ThoughtsPageInner() {
             setPreviewThought(null);
             return;
         }
+
+        if (previewThought && String(previewThought.id) === String(thoughtId)) {
+            return;
+        }
+
         const found = thoughts.find((t) => String(t.id) === String(thoughtId));
         if (found) {
             setPreviewThought(found);
@@ -97,20 +103,28 @@ function ThoughtsPageInner() {
                 .then((data) => { if (data) setPreviewThought(data); })
                 .catch(() => {});
         }
-    }, [searchParams, thoughts.length, loading, fetchThoughtById]);
+    }, [searchParams, thoughts, loading, fetchThoughtById, previewThought]);
 
     const handleOpen = useCallback((thought) => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("thought", thought.id);
-        router.push(`?${params.toString()}`, { scroll: false });
-    }, [router, searchParams]);
+        setPreviewThought(thought);
+        if (typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            url.searchParams.set("thought", thought.id);
+            window.history.pushState(null, "", url.toString());
+        }
+    }, []);
 
     const handleClosePreview = useCallback(() => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("thought");
-        const query = params.toString();
-        router.push(query ? `?${query}` : "?", { scroll: false });
-    }, [router, searchParams]);
+        setPreviewThought(null);
+        if (typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("thought");
+            const newUrl = url.searchParams.toString()
+                ? `${url.pathname}?${url.searchParams.toString()}`
+                : url.pathname;
+            window.history.replaceState(null, "", newUrl);
+        }
+    }, []);
 
     const handleEnterSelectMode = useCallback((id) => {
         setSelectedIds([id]);
