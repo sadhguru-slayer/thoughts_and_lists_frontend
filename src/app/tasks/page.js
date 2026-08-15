@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader2, Search, ListTodo } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+
 import TaskInput from "@/components/tasks/TaskInput";
 import TaskCard from "@/components/tasks/TaskCard";
 import TaskFilters from "@/components/tasks/TaskFilters";
@@ -28,42 +28,41 @@ function TasksPageInner() {
 
     const [selectedTask, setSelectedTask] = useState(null);
     const [searchInput, setSearchInput] = useState(filters.search || "");
-    const searchParams = useSearchParams();
+    const didInitRef = useRef(false);
 
-    // Auto-open task from URL ?task=id on initial load / navigation
+    // On mount: read ?task= from the real URL once, strip it immediately,
+    // then open the modal. Never read URL params again — state only.
     useEffect(() => {
-        const taskId = searchParams.get("task");
-        if (!taskId) {
-            setSelectedTask(null);
-            return;
-        }
+        if (didInitRef.current) return;
+        didInitRef.current = true;
 
-        if (selectedTask && String(selectedTask.id) === String(taskId)) {
-            return;
-        }
+        const params = new URLSearchParams(window.location.search);
+        const taskId = params.get("task");
+        if (!taskId) return;
 
+        // Strip query from address bar immediately so Next.js cache won't restore it
+        params.delete("task");
+        const qs = params.toString();
+        window.history.replaceState(null, "", qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
+
+        // Find in already-loaded list or fetch
         const found = tasks.find((t) => String(t.id) === String(taskId));
         if (found) {
             setSelectedTask(found);
-        } else if (!loading) {
+        } else {
             fetchTaskById(taskId)
                 .then((data) => { if (data) setSelectedTask(data); })
-                .catch(() => { });
+                .catch(() => {});
         }
-    }, [searchParams, tasks, loading, fetchTaskById, selectedTask]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const handleOpen = useCallback((task) => {
         setSelectedTask(task);
-        const url = new URL(window.location.href);
-        url.searchParams.set("task", task.id);
-        window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
     }, []);
 
     const handleClose = useCallback(() => {
         setSelectedTask(null);
-        const url = new URL(window.location.href);
-        url.searchParams.delete("task");
-        const qs = url.searchParams.toString();
-        window.history.replaceState(null, "", qs ? url.pathname + "?" + qs : url.pathname);
     }, []);
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";

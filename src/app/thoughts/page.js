@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useCallback, useEffect, Suspense, useMemo, useRef } from "react";
+
 import ThoughtInput from "@/components/thoughts/ThoughtInput";
 import ThoughtCard from "@/components/thoughts/ThoughtCard";
 import ThoughtPreview from "@/components/thoughts/ThoughtPreview";
@@ -18,7 +18,7 @@ function ThoughtsPageInner() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [filterType, setFilterType] = useState("all"); // "all" | "pinned" | "starred"
     const [sortOrder, setSortOrder] = useState("newest"); // "newest" | "oldest" | "title"
-    const searchParams = useSearchParams();
+    const didInitRef = useRef(false);
 
     const isSelectMode = selectedIds.length > 0;
 
@@ -82,40 +82,37 @@ function ThoughtsPageInner() {
 
     const handleCancelSelect = () => setSelectedIds([]);
 
+    // On mount: read ?thought= once, strip it, open modal via state only
     useEffect(() => {
-        const thoughtId = searchParams.get("thought");
-        if (!thoughtId) {
-            setPreviewThought(null);
-            return;
-        }
+        if (didInitRef.current) return;
+        didInitRef.current = true;
 
-        if (previewThought && String(previewThought.id) === String(thoughtId)) {
-            return;
-        }
+        const params = new URLSearchParams(window.location.search);
+        const thoughtId = params.get("thought");
+        if (!thoughtId) return;
+
+        // Strip immediately so Next.js cache won't restore it
+        params.delete("thought");
+        const qs = params.toString();
+        window.history.replaceState(null, "", qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
 
         const found = thoughts.find((t) => String(t.id) === String(thoughtId));
         if (found) {
             setPreviewThought(found);
-        } else if (!loading) {
+        } else {
             fetchThoughtById(thoughtId)
                 .then((data) => { if (data) setPreviewThought(data); })
                 .catch(() => {});
         }
-    }, [searchParams, thoughts, loading, fetchThoughtById, previewThought]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleOpen = useCallback((thought) => {
         setPreviewThought(thought);
-        const url = new URL(window.location.href);
-        url.searchParams.set("thought", thought.id);
-        window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
     }, []);
 
     const handleClosePreview = useCallback(() => {
         setPreviewThought(null);
-        const url = new URL(window.location.href);
-        url.searchParams.delete("thought");
-        const qs = url.searchParams.toString();
-        window.history.replaceState(null, "", qs ? url.pathname + "?" + qs : url.pathname);
     }, []);
 
     const handleEnterSelectMode = useCallback((id) => {
