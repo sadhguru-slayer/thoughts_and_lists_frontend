@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader2, Search, ListTodo } from "lucide-react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import TaskInput from "@/components/tasks/TaskInput";
 import TaskCard from "@/components/tasks/TaskCard";
 import TaskFilters from "@/components/tasks/TaskFilters";
@@ -29,8 +29,6 @@ function TasksPageInner() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [searchInput, setSearchInput] = useState(filters.search || "");
     const searchParams = useSearchParams();
-    const pathname = usePathname();
-    const router = useRouter();
 
     // Auto-open task from URL ?task=id on initial load / navigation
     useEffect(() => {
@@ -55,29 +53,18 @@ function TasksPageInner() {
     }, [searchParams, tasks, loading, fetchTaskById, selectedTask]);
     const handleOpen = useCallback((task) => {
         setSelectedTask(task);
+        const url = new URL(window.location.href);
+        url.searchParams.set("task", task.id);
+        window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
+    }, []);
 
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("task", task.id);
-
-        router.push(`${pathname}?${params.toString()}`, {
-            scroll: false,
-        });
-    }, [pathname, searchParams, router]);
     const handleClose = useCallback(() => {
         setSelectedTask(null);
-
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("task");
-
-        const query = params.toString();
-
-        router.replace(
-            query ? `${pathname}?${query}` : pathname,
-            {
-                scroll: false,
-            }
-        );
-    }, [pathname, searchParams, router]);
+        const url = new URL(window.location.href);
+        url.searchParams.delete("task");
+        const qs = url.searchParams.toString();
+        window.history.replaceState(null, "", qs ? url.pathname + "?" + qs : url.pathname);
+    }, []);
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";
         if (isCompleted) {

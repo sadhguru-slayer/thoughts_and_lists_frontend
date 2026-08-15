@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, Suspense, useMemo } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import ThoughtInput from "@/components/thoughts/ThoughtInput";
 import ThoughtCard from "@/components/thoughts/ThoughtCard";
 import ThoughtPreview from "@/components/thoughts/ThoughtPreview";
@@ -19,8 +19,6 @@ function ThoughtsPageInner() {
     const [filterType, setFilterType] = useState("all"); // "all" | "pinned" | "starred"
     const [sortOrder, setSortOrder] = useState("newest"); // "newest" | "oldest" | "title"
     const searchParams = useSearchParams();
-    const pathname = usePathname();
-    const router = useRouter();
 
     const isSelectMode = selectedIds.length > 0;
 
@@ -107,23 +105,17 @@ function ThoughtsPageInner() {
 
     const handleOpen = useCallback((thought) => {
         setPreviewThought(thought);
-        if (typeof window !== "undefined") {
-            const url = new URL(window.location.href);
-            url.searchParams.set("thought", thought.id);
-            window.history.pushState(null, "", url.toString());
-        }
+        const url = new URL(window.location.href);
+        url.searchParams.set("thought", thought.id);
+        window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
     }, []);
 
     const handleClosePreview = useCallback(() => {
         setPreviewThought(null);
-        if (typeof window !== "undefined") {
-            const url = new URL(window.location.href);
-            url.searchParams.delete("thought");
-            const newUrl = url.searchParams.toString()
-                ? `${url.pathname}?${url.searchParams.toString()}`
-                : url.pathname;
-            window.history.replaceState(null, "", newUrl);
-        }
+        const url = new URL(window.location.href);
+        url.searchParams.delete("thought");
+        const qs = url.searchParams.toString();
+        window.history.replaceState(null, "", qs ? url.pathname + "?" + qs : url.pathname);
     }, []);
 
     const handleEnterSelectMode = useCallback((id) => {
