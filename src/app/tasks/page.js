@@ -58,7 +58,7 @@ function TasksPageInner() {
         const params = new URLSearchParams(searchParams.toString());
         params.delete("task");
         const query = params.toString();
-        router.push(query ? `?${query}` : "?", { scroll: false });
+        router.replace(query ? `?${query}` : "/tasks", { scroll: false });
     }, [router, searchParams]);
 
     const handleToggleComplete = useCallback(async (task) => {

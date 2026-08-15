@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, Archive, Loader2, Save, Bell, CheckCircle2, RotateCcw, Calendar, Flag, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+
 import { useTasks } from "@/lib/TasksContext";
 import { notify } from "@/lib/notify";
 import DateTimePicker from "./DateTimePicker";
@@ -29,7 +29,7 @@ const fieldClass = "w-full text-xs rounded-xl border border-zinc-200 dark:border
 const labelClass = "text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1.5";
 
 export default function TaskDetailSheet({ task, onClose }) {
-    const router = useRouter();
+
     const { fetchTaskById, editTask, deleteTask, completeTask, uncompleteTask, archiveTask } = useTasks();
 
     const [fullTask, setFullTask] = useState(null);
@@ -46,7 +46,6 @@ export default function TaskDetailSheet({ task, onClose }) {
     const [recurrence, setRecurrence] = useState("NONE");
 
     const handleClose = () => {
-        router.replace("/tasks", { scroll: false });
         onClose();
     };
 
