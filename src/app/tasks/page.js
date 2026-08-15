@@ -34,6 +34,7 @@ function TasksPageInner() {
     // Auto-open task from URL ?task=id
     useEffect(() => {
         const taskId = searchParams.get("task");
+        console.log("[TasksPage] useEffect auto-open check | 'task' param:", taskId, "| current selectedTask:", selectedTask?.id);
         if (!taskId) {
             setSelectedTask(null);
             return;
@@ -43,15 +44,18 @@ function TasksPageInner() {
         }
         const found = tasks.find((t) => String(t.id) === String(taskId));
         if (found) {
+            console.log("[TasksPage] Found task in list, setting selectedTask:", found.id);
             setSelectedTask(found);
         } else if (!loading) {
+            console.log("[TasksPage] Task not in memory list, fetching by ID:", taskId);
             fetchTaskById(taskId)
                 .then((data) => { if (data) setSelectedTask(data); })
-                .catch(() => {});
+                .catch((err) => { console.error("[TasksPage] fetchTaskById failed:", err); });
         }
     }, [searchParams, tasks, loading, fetchTaskById, selectedTask]);
 
     const handleOpen = useCallback((task) => {
+        console.log("[TasksPage] handleOpen called for task:", task?.id);
         setSelectedTask(task);
         const params = new URLSearchParams(searchParams.toString());
         params.set("task", task.id);
@@ -59,6 +63,7 @@ function TasksPageInner() {
     }, [router, searchParams]);
 
     const handleClose = useCallback(() => {
+        console.log("[TasksPage] handleClose called -> setting selectedTask to null and removing 'task' param");
         setSelectedTask(null);
         const params = new URLSearchParams(searchParams.toString());
         params.delete("task");

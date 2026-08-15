@@ -19,6 +19,7 @@ export default function TaskCard({ task, onOpen, onToggleComplete }) {
     };
 
     const handleOpen = () => {
+        console.log("[TaskCard] Clicked task to open:", task?.id, task?.title);
         onOpen(task);
     };
 
