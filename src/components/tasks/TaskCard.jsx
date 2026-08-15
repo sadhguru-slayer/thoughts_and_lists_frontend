@@ -2,12 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Calendar, Check } from "lucide-react";
-import { useRouter } from "next/navigation";
+
 import { cn } from "@/lib/utils";
 import { PRIORITY_CONFIG, STATUS_CONFIG, formatTaskDate, isOverdue } from "@/lib/taskUtils";
 
 export default function TaskCard({ task, onOpen, onToggleComplete }) {
-    const router = useRouter();
+
     const completed = task.completed || task.status === "COMPLETED";
     const overdue = isOverdue(task);
     const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.MEDIUM;
@@ -19,7 +19,6 @@ export default function TaskCard({ task, onOpen, onToggleComplete }) {
     };
 
     const handleOpen = () => {
-        router.push(`/tasks?task=${task.id}`, { scroll: false });
         onOpen(task);
     };
 

@@ -38,6 +38,9 @@ function TasksPageInner() {
             setSelectedTask(null);
             return;
         }
+        if (selectedTask && String(selectedTask.id) === String(taskId)) {
+            return;
+        }
         const found = tasks.find((t) => String(t.id) === String(taskId));
         if (found) {
             setSelectedTask(found);
@@ -46,15 +49,17 @@ function TasksPageInner() {
                 .then((data) => { if (data) setSelectedTask(data); })
                 .catch(() => {});
         }
-    }, [searchParams, tasks.length, loading, fetchTaskById]);
+    }, [searchParams, tasks, loading, fetchTaskById, selectedTask]);
 
     const handleOpen = useCallback((task) => {
+        setSelectedTask(task);
         const params = new URLSearchParams(searchParams.toString());
         params.set("task", task.id);
         router.push(`?${params.toString()}`, { scroll: false });
     }, [router, searchParams]);
 
     const handleClose = useCallback(() => {
+        setSelectedTask(null);
         const params = new URLSearchParams(searchParams.toString());
         params.delete("task");
         const query = params.toString();
