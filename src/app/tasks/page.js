@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader2, Search, ListTodo } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -30,13 +30,19 @@ function TasksPageInner() {
     const [searchInput, setSearchInput] = useState(filters.search || "");
     const searchParams = useSearchParams();
     const router = useRouter();
+    const closedTaskIdRef = useRef(null);
 
     // Auto-open task from URL ?task=id
     useEffect(() => {
         const taskId = searchParams.get("task");
-        console.log("[TasksPage] useEffect auto-open check | 'task' param:", taskId, "| current selectedTask:", selectedTask?.id);
+        console.log("[TasksPage] useEffect auto-open check | 'task' param:", taskId, "| current selectedTask:", selectedTask?.id, "| closedRef:", closedTaskIdRef.current);
         if (!taskId) {
             setSelectedTask(null);
+            closedTaskIdRef.current = null;
+            return;
+        }
+        if (closedTaskIdRef.current && String(closedTaskIdRef.current) === String(taskId)) {
+            console.log("[TasksPage] Skipping auto-open: task was explicitly closed by user:", taskId);
             return;
         }
         if (selectedTask && String(selectedTask.id) === String(taskId)) {
@@ -56,6 +62,7 @@ function TasksPageInner() {
 
     const handleOpen = useCallback((task) => {
         console.log("[TasksPage] handleOpen called for task:", task?.id);
+        closedTaskIdRef.current = null;
         setSelectedTask(task);
         const params = new URLSearchParams(searchParams.toString());
         params.set("task", task.id);
@@ -63,13 +70,17 @@ function TasksPageInner() {
     }, [router, searchParams]);
 
     const handleClose = useCallback(() => {
-        console.log("[TasksPage] handleClose called -> setting selectedTask to null and removing 'task' param");
+        const taskId = searchParams.get("task") || selectedTask?.id;
+        console.log("[TasksPage] handleClose called for task:", taskId);
+        if (taskId) {
+            closedTaskIdRef.current = String(taskId);
+        }
         setSelectedTask(null);
         const params = new URLSearchParams(searchParams.toString());
         params.delete("task");
         const query = params.toString();
         router.replace(query ? `?${query}` : "/tasks", { scroll: false });
-    }, [router, searchParams]);
+    }, [router, searchParams, selectedTask]);
 
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";
