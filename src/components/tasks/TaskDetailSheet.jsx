@@ -95,13 +95,17 @@ export default function TaskDetailSheet({ task, onClose }) {
         setSaving(true);
         try {
             const dueDateISO = dueDate ? new Date(dueDate).toISOString() : null;
+            const reminderAtISO = reminderAt
+                ? new Date(reminderAt).toISOString()
+                : dueDateISO;
+
             await editTask(task.id, {
                 title: title.trim(),
                 description: description.trim() || null,
                 priority,
                 status,
                 due_date: dueDateISO,
-                reminder_at: reminderAt ? new Date(reminderAt).toISOString() : null,
+                reminder_at: reminderAtISO,
                 recurrence_interval: recurrence,
             });
             notify.success("Task updated");

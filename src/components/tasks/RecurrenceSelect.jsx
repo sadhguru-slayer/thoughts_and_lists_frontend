@@ -9,6 +9,7 @@ const RECURRENCE_OPTIONS = [
     { value: "DAILY", label: "Daily", hint: "Repeats every day at your set time" },
     { value: "WEEKLY", label: "Weekly", hint: "Repeats every week on the same day & time" },
     { value: "MONTHLY", label: "Monthly", hint: "Repeats every month on the same date & time" },
+    // { value: "TESTING_SEC", label: "Testing (1m)", hint: "Repeats every 1 minute for testing" },
 ];
 
 export default function RecurrenceSelect({ value = "NONE", onChange, dueDate, disabled = false }) {
