@@ -27,16 +27,16 @@ export default function TaskFilters() {
     const activeId = getActiveFilterId(filters);
 
     return (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-4">
             {/* Status Pills */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none max-w-full">
                 {FILTER_OPTIONS.map((opt) => (
                     <button
                         key={opt.id}
                         type="button"
                         onClick={() => updateFilters(opt.patch)}
                         className={cn(
-                            "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all active:scale-95",
+                            "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all active:scale-95 cursor-pointer",
                             activeId === opt.id
                                 ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs font-semibold"
                                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
@@ -48,14 +48,14 @@ export default function TaskFilters() {
             </div>
 
             {/* Priority & Sort Dropdowns */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full md:w-auto shrink-0">
                 {/* Priority Filter */}
-                <div className="relative flex items-center shrink-0">
-                    <ListFilter className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                <div className="relative flex items-center w-full sm:w-auto">
+                    <ListFilter className="absolute left-2.5 z-10 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
                     <select
                         value={filters.priority || "ALL"}
                         onChange={(e) => updateFilters({ priority: e.target.value === "ALL" ? null : e.target.value })}
-                        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none"
+                        className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none"
                     >
                         <option value="ALL">All Priorities</option>
                         <option value="URGENT">Urgent</option>
@@ -66,12 +66,12 @@ export default function TaskFilters() {
                 </div>
 
                 {/* Sort Dropdown */}
-                <div className="relative flex items-center shrink-0">
-                    <ArrowUpDown className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                <div className="relative flex items-center w-full sm:w-auto">
+                    <ArrowUpDown className="absolute left-2.5 z-10 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
                     <select
                         value={filters.sort || "created_desc"}
                         onChange={(e) => updateFilters({ sort: e.target.value })}
-                        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none"
+                        className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none"
                     >
                         <option value="created_desc">Newest First</option>
                         <option value="created_asc">Oldest First</option>

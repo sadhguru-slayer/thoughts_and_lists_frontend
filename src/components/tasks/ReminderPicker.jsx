@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Clock, Check, X, Calendar } from "lucide-react";
+import { Bell, Clock } from "lucide-react";
 import { formatFriendlyDateTime, toDatetimeLocalValue } from "@/lib/taskUtils";
 import DateTimePicker from "./DateTimePicker";
 
 export default function ReminderPicker({ dueDate, value, onChange, disabled = false }) {
-    const [mode, setMode] = useState("auto"); // 'auto', 'custom', 'none'
+    const [mode, setMode] = useState("none");
     const [customOpen, setCustomOpen] = useState(false);
 
-    // Sync mode based on value and dueDate
     useEffect(() => {
         if (!value) {
             setMode("none");
@@ -36,7 +35,6 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
         }
 
         if (!dueDate) {
-            // If no due date set yet, default to today 9 AM or 1 hour from now
             const now = new Date();
             const defaultDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0);
             if (defaultDate < now) defaultDate.setTime(now.getTime() + 60 * 60 * 1000);
@@ -66,7 +64,6 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
 
     return (
         <div className="space-y-2">
-            {/* Quick offset chips */}
             <div className="flex flex-wrap items-center gap-1.5">
                 <button
                     type="button"
@@ -74,8 +71,8 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
                     onClick={() => handlePresetSelect("none")}
                     className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
                         mode === "none"
-                            ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900 border-transparent shadow-xs"
-                            : "bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600"
+                            ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-transparent shadow-2xs"
+                            : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                     }`}
                 >
                     Off
@@ -87,8 +84,8 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
                     onClick={() => handlePresetSelect("same")}
                     className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
                         mode === "same"
-                            ? "bg-violet-600 text-white border-transparent shadow-xs"
-                            : "bg-violet-50 dark:bg-violet-950/40 border-violet-200 dark:border-violet-800/60 text-violet-700 dark:text-violet-300 hover:bg-violet-100"
+                            ? "bg-violet-600 text-white border-transparent shadow-2xs"
+                            : "bg-violet-50/80 dark:bg-violet-950/40 border-violet-200 dark:border-violet-800/60 text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/50"
                     }`}
                 >
                     At due time
@@ -100,8 +97,8 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
                     onClick={() => handlePresetSelect("15m")}
                     className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
                         mode === "15m"
-                            ? "bg-violet-600 text-white border-transparent shadow-xs"
-                            : "bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300"
+                            ? "bg-violet-600 text-white border-transparent shadow-2xs"
+                            : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                     }`}
                 >
                     15m before
@@ -113,8 +110,8 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
                     onClick={() => handlePresetSelect("1h")}
                     className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
                         mode === "1h"
-                            ? "bg-violet-600 text-white border-transparent shadow-xs"
-                            : "bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300"
+                            ? "bg-violet-600 text-white border-transparent shadow-2xs"
+                            : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                     }`}
                 >
                     1h before
@@ -131,8 +128,8 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
                     }}
                     className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border flex items-center gap-1 transition-all ${
                         mode === "custom" || customOpen
-                            ? "bg-violet-600 text-white border-transparent shadow-xs"
-                            : "bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300"
+                            ? "bg-violet-600 text-white border-transparent shadow-2xs"
+                            : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                     }`}
                 >
                     <Clock className="w-3 h-3" />
@@ -140,7 +137,6 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
                 </button>
             </div>
 
-            {/* Custom Datetime Input display if open */}
             {customOpen && (
                 <div className="pt-1">
                     <DateTimePicker
@@ -155,11 +151,10 @@ export default function ReminderPicker({ dueDate, value, onChange, disabled = fa
                 </div>
             )}
 
-            {/* Selected Summary Badge */}
             {value && (
-                <div className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 font-medium pt-0.5">
-                    <Bell className="w-3.5 h-3.5 shrink-0 animate-bounce-short" />
-                    <span>Reminder set for <strong>{formatFriendlyDateTime(value)}</strong></span>
+                <div className="flex items-center gap-1.5 text-[11px] text-violet-600 dark:text-violet-400 font-semibold pt-0.5">
+                    <Bell className="w-3 h-3 shrink-0" />
+                    <span>Reminder: <strong>{formatFriendlyDateTime(value)}</strong></span>
                 </div>
             )}
         </div>

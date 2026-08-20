@@ -339,28 +339,28 @@ export default function TaskDetailSheet({ task, onClose }) {
                                 <button
                                     onClick={handleToggleComplete}
                                     disabled={loading}
-                                    className="flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40"
+                                    className="flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 px-1 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40 cursor-pointer"
                                 >
                                     {isCompleted
-                                        ? <><RotateCcw className="w-3.5 h-3.5" /> Mark Pending</>
-                                        : <><CheckCircle2 className="w-3.5 h-3.5" /> Mark Done</>
+                                        ? <><RotateCcw className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">Pending</span></>
+                                        : <><CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">Done</span></>
                                     }
                                 </button>
                                 <button
                                     onClick={handleArchive}
                                     disabled={loading}
-                                    className="flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40"
+                                    className="flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 px-1 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40 cursor-pointer"
                                 >
-                                    <Archive className="w-3.5 h-3.5" />
-                                    Archive
+                                    <Archive className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate">Archive</span>
                                 </button>
                                 <button
                                     onClick={handleDelete}
                                     disabled={loading}
-                                    className="flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors disabled:opacity-40"
+                                    className="flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 px-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors disabled:opacity-40 cursor-pointer"
                                 >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    Delete
+                                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate">Delete</span>
                                 </button>
                             </div>
                         </div>

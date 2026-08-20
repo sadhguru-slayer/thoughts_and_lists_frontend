@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Plus, Trash2, X, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,7 @@ function sectionFromTemplate(template) {
   };
 }
 
-function sectionFromLatestStructureEntry(apiSection, templates) {
+function sectionFromLatestStructureEntry(apiSection, templates, index = 0) {
   const tid = apiSection.template_id != null ? Number(apiSection.template_id) : null;
   const template = tid != null ? templates.find((t) => t.id === tid) : null;
   const rawFields = apiSection.fields ?? [];
@@ -64,7 +64,7 @@ function sectionFromLatestStructureEntry(apiSection, templates) {
       templateFieldId = match?.id;
     }
     return {
-      clientKey: newClientKey(),
+      clientKey: `field-latest-${tid || "custom"}-${index}-${idx}`,
       templateFieldId,
       label: f.label,
       field_type: f.field_type,
@@ -72,7 +72,7 @@ function sectionFromLatestStructureEntry(apiSection, templates) {
     };
   });
   return {
-    clientKey: newClientKey(),
+    clientKey: `sec-latest-${tid || "custom"}-${index}`,
     templateId: tid,
     name: apiSection.name ?? "",
     reusable: true,
@@ -92,8 +92,8 @@ function emptyCustomSection(reusable = true) {
 
 function initialDraftSectionsFromLatest(latestStructure, templates) {
   if (!latestStructure?.sections?.length) return [];
-  return latestStructure.sections.map((sec) =>
-    sectionFromLatestStructureEntry(sec, templates)
+  return latestStructure.sections.map((sec, idx) =>
+    sectionFromLatestStructureEntry(sec, templates, idx)
   );
 }
 
@@ -291,10 +291,24 @@ export default function JournalCreateForm({
     return () => cancelAnimationFrame(id);
   }, []);
 
+  const hasInitializedRef = useRef(false);
   const [content, setContent] = useState("");
-  const [draftSections, setDraftSections] = useState(() =>
-    initialDraftSectionsFromLatest(latestStructure, templates)
-  );
+  const [userHasEdited, setUserHasEdited] = useState(false);
+  const [draftSections, setDraftSections] = useState(() => {
+    const initial = initialDraftSectionsFromLatest(latestStructure, templates);
+    if (initial.length > 0) {
+      hasInitializedRef.current = true;
+    }
+    return initial;
+  });
+
+  useEffect(() => {
+    if (!userHasEdited && !hasInitializedRef.current && latestStructure?.sections?.length) {
+      setDraftSections(initialDraftSectionsFromLatest(latestStructure, templates));
+      hasInitializedRef.current = true;
+    }
+  }, [latestStructure, templates, userHasEdited]);
+
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [newCustomSectionReusable, setNewCustomSectionReusable] = useState(true);
 
@@ -302,11 +316,13 @@ export default function JournalCreateForm({
     const id = selectedTemplateId === "" ? NaN : Number.parseInt(selectedTemplateId, 10);
     const template = templates.find((t) => t.id === id);
     if (!template) return;
+    setUserHasEdited(true);
     setDraftSections((s) => [...s, sectionFromTemplate(template)]);
     setSelectedTemplateId("");
   };
 
   const addCustomSection = () => {
+    setUserHasEdited(true);
     setDraftSections((s) => [
       ...s,
       emptyCustomSection(newCustomSectionReusable),
@@ -314,12 +330,14 @@ export default function JournalCreateForm({
   };
 
   const setSectionReusable = (clientKey, reusable) => {
+    setUserHasEdited(true);
     setDraftSections((s) =>
       s.map((sec) => (sec.clientKey === clientKey ? { ...sec, reusable } : sec))
     );
   };
 
   const removeSection = (clientKey) => {
+    setUserHasEdited(true);
     setDraftSections((s) => s.filter((x) => x.clientKey !== clientKey));
   };
 

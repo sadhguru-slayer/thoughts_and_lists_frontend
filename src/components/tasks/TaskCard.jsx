@@ -31,7 +31,7 @@ export default function TaskCard({ task, onOpen, onToggleComplete }) {
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             onClick={handleOpen}
             className={cn(
-                "group flex items-start gap-3 rounded-2xl border p-4 shadow-2xs transition-colors cursor-pointer overflow-hidden relative",
+                "group flex items-start gap-3 rounded-2xl border p-3.5 sm:p-4 shadow-2xs transition-colors cursor-pointer overflow-hidden relative",
                 completed
                     ? "border-zinc-200/60 bg-zinc-50/60 dark:border-zinc-800/60 dark:bg-zinc-900/30 opacity-70"
                     : "border-zinc-200/80 bg-white hover:border-zinc-300 hover:shadow-xs dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-zinc-700",
@@ -43,7 +43,7 @@ export default function TaskCard({ task, onOpen, onToggleComplete }) {
                 type="button"
                 onClick={handleToggle}
                 className={cn(
-                    "mt-0.5 shrink-0 w-4 h-4 rounded-full border flex items-center justify-center transition-all",
+                    "mt-0.5 shrink-0 w-4 h-4 rounded-full border flex items-center justify-center transition-all cursor-pointer",
                     completed
                         ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-100 dark:border-zinc-100 dark:text-zinc-900"
                         : "border-zinc-300 dark:border-zinc-600 hover:border-zinc-900 dark:hover:border-zinc-100"
@@ -55,10 +55,10 @@ export default function TaskCard({ task, onOpen, onToggleComplete }) {
 
             {/* Main content */}
             <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-1.5">
                     <h3
                         className={cn(
-                            "text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug tracking-tight truncate",
+                            "text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug tracking-tight truncate flex-1 min-w-0",
                             completed && "line-through text-zinc-400 dark:text-zinc-500 font-normal"
                         )}
                     >

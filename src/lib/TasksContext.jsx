@@ -91,10 +91,42 @@ export function TasksProvider({ children }) {
     }, []);
 
     const addTask = useCallback(async (payload) => {
-        const res = await api.post("/api/v1/tasks", payload);
-        await fetchTasks(filters);
-        return res.data;
-    }, [fetchTasks, filters]);
+        const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const tempTask = {
+            id: tempId,
+            uuid: tempId,
+            title: payload.title,
+            description: payload.description || null,
+            priority: payload.priority || "MEDIUM",
+            status: payload.status || "TODO",
+            due_date: payload.due_date || null,
+            reminder_at: payload.reminder_at || null,
+            recurrence_interval: payload.recurrence_interval || "NONE",
+            completed: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+
+        // Optimistically add to state immediately
+        setTasks((prev) => [tempTask, ...prev]);
+        setPagination((prev) => ({ ...prev, total: (prev?.total ?? 0) + 1 }));
+
+        try {
+            const res = await api.post("/api/v1/tasks", payload);
+            const serverTask = res.data?.task || res.data;
+            if (serverTask) {
+                const mapped = { ...serverTask, id: serverTask.uuid || serverTask.id };
+                setTasks((prev) => prev.map((t) => (t.id === tempId ? mapped : t)));
+                return mapped;
+            }
+            return res.data;
+        } catch (err) {
+            // Revert optimistic task on error
+            setTasks((prev) => prev.filter((t) => t.id !== tempId));
+            setPagination((prev) => ({ ...prev, total: Math.max(0, (prev?.total ?? 1) - 1) }));
+            throw err;
+        }
+    }, []);
 
     const editTask = useCallback(async (id, payload) => {
         const res = await api.patch(`/api/v1/tasks/${id}`, payload);
