@@ -96,3 +96,102 @@ export function getPresetDatetime(preset, customTime = "09:00") {
     return toDatetimeLocalValue(target);
 }
 
+export function groupTasksByDate(tasks) {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+    const startOfDayAfterTomorrow = new Date(startOfTomorrow);
+    startOfDayAfterTomorrow.setDate(startOfDayAfterTomorrow.getDate() + 1);
+    const startOfNextWeek = new Date(startOfToday);
+    startOfNextWeek.setDate(startOfNextWeek.getDate() + 7);
+
+    const groups = [
+        { 
+            key: "overdue",   
+            label: "Overdue",     
+            emoji: "🔴", 
+            badgeStyle: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20 dark:border-red-500/30",
+            dotColor: "bg-red-500",
+            tasks: [] 
+        },
+        { 
+            key: "today",     
+            label: "Today",        
+            emoji: "📅", 
+            badgeStyle: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30",
+            dotColor: "bg-amber-500",
+            tasks: [] 
+        },
+        { 
+            key: "tomorrow",  
+            label: "Tomorrow",     
+            emoji: "🌅", 
+            badgeStyle: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 dark:border-blue-500/30",
+            dotColor: "bg-blue-500",
+            tasks: [] 
+        },
+        { 
+            key: "this_week", 
+            label: "This Week",    
+            emoji: "📆", 
+            badgeStyle: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 dark:border-indigo-500/30",
+            dotColor: "bg-indigo-500",
+            tasks: [] 
+        },
+        { 
+            key: "later",     
+            label: "Later",        
+            emoji: "🗓️",  
+            badgeStyle: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20 dark:border-zinc-500/30",
+            dotColor: "bg-zinc-400",
+            tasks: [] 
+        },
+        { 
+            key: "no_date",   
+            label: "No Due Date",  
+            emoji: "📋", 
+            badgeStyle: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20 dark:border-zinc-500/30",
+            dotColor: "bg-zinc-400",
+            tasks: [] 
+        },
+        { 
+            key: "completed", 
+            label: "Completed",    
+            emoji: "✅", 
+            badgeStyle: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30",
+            dotColor: "bg-emerald-500",
+            tasks: [] 
+        },
+    ];
+
+    for (const task of tasks) {
+        const isDone = task.completed || task.status === "COMPLETED" || task.status === "CANCELLED";
+
+        if (isDone) {
+            groups.find(g => g.key === "completed").tasks.push(task);
+            continue;
+        }
+
+        if (!task.due_date) {
+            groups.find(g => g.key === "no_date").tasks.push(task);
+            continue;
+        }
+
+        const due = new Date(task.due_date);
+
+        if (due < startOfToday) {
+            groups.find(g => g.key === "overdue").tasks.push(task);
+        } else if (due < startOfTomorrow) {
+            groups.find(g => g.key === "today").tasks.push(task);
+        } else if (due < startOfDayAfterTomorrow) {
+            groups.find(g => g.key === "tomorrow").tasks.push(task);
+        } else if (due < startOfNextWeek) {
+            groups.find(g => g.key === "this_week").tasks.push(task);
+        } else {
+            groups.find(g => g.key === "later").tasks.push(task);
+        }
+    }
+
+    return groups.filter(g => g.tasks.length > 0);
+}

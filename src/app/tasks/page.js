@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Search, ListTodo, X, CheckCircle2 } from "lucide-react";
+import { ChevronDown, Loader2, Search, ListTodo, X, CheckCircle2 } from "lucide-react";
 
 import TaskInput from "@/components/tasks/TaskInput";
 import TaskCard from "@/components/tasks/TaskCard";
@@ -10,7 +10,91 @@ import TaskFilters from "@/components/tasks/TaskFilters";
 import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
 import Pagination from "@/components/ui/Pagination";
 import { useTasks } from "@/lib/TasksContext";
+import { groupTasksByDate } from "@/lib/taskUtils";
+import { cn } from "@/lib/utils";
 
+// ---------------------------------------------------------------------------
+// TaskGroup — collapsible section with a date-bucket header
+// ---------------------------------------------------------------------------
+function TaskGroup({ group, onOpen, onToggleComplete, defaultOpen = true }) {
+    const [open, setOpen] = useState(defaultOpen);
+
+    return (
+        <div className="space-y-2.5">
+            {/* Cluster Header Button */}
+            <button
+                type="button"
+                onClick={() => setOpen(o => !o)}
+                className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-200 cursor-pointer group select-none",
+                    "bg-zinc-50/80 hover:bg-zinc-100/90 dark:bg-zinc-900/40 dark:hover:bg-zinc-800/60",
+                    "border border-zinc-200/60 dark:border-zinc-800/60"
+                )}
+            >
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <motion.div
+                        animate={{ rotate: open ? 0 : -90 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors"
+                    >
+                        <ChevronDown className="w-4 h-4 shrink-0 stroke-[2.2]" />
+                    </motion.div>
+
+                    <div className="flex items-center gap-2 truncate">
+                        <span className="text-sm leading-none" aria-hidden="true">{group.emoji}</span>
+                        <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 tracking-tight">
+                            {group.label}
+                        </span>
+                        {group.badgeStyle && (
+                            <span className={cn(
+                                "hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                                group.badgeStyle
+                            )}>
+                                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", group.dotColor)} />
+                                {group.label}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold tabular-nums bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-zinc-700/60 shadow-2xs">
+                        {group.tasks.length} {group.tasks.length === 1 ? "item" : "items"}
+                    </span>
+                </div>
+            </button>
+
+            {/* Cards Container */}
+            <AnimatePresence initial={false}>
+                {open && (
+                    <motion.div
+                        key="cards"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-2 overflow-hidden pl-1 sm:pl-2 border-l-2 border-zinc-100 dark:border-zinc-800/80 ml-3.5 sm:ml-4"
+                    >
+                        <AnimatePresence mode="popLayout">
+                            {group.tasks.map(task => (
+                                <TaskCard
+                                    key={task.id}
+                                    task={task}
+                                    onOpen={onOpen}
+                                    onToggleComplete={onToggleComplete}
+                                />
+                            ))}
+                        </AnimatePresence>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
 function TasksPageInner() {
     const {
         tasks,
@@ -30,8 +114,10 @@ function TasksPageInner() {
     const [searchInput, setSearchInput] = useState(filters.search || "");
     const didInitRef = useRef(false);
 
-    // On mount: read ?task= from the real URL once, strip it immediately,
-    // then open the modal. Never read URL params again — state only.
+    // Derive date-bucketed groups from the current page of tasks
+    const groups = useMemo(() => groupTasksByDate(tasks), [tasks]);
+
+    // On mount: read ?task= from URL once, strip it, then open modal.
     useEffect(() => {
         if (didInitRef.current) return;
         didInitRef.current = true;
@@ -40,12 +126,10 @@ function TasksPageInner() {
         const taskId = params.get("task");
         if (!taskId) return;
 
-        // Strip query from address bar immediately so Next.js cache won't restore it
         params.delete("task");
         const qs = params.toString();
         window.history.replaceState(null, "", qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
 
-        // Find in already-loaded list or fetch
         const found = tasks.find((t) => String(t.id) === String(taskId));
         if (found) {
             setSelectedTask(found);
@@ -57,21 +141,13 @@ function TasksPageInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const handleOpen = useCallback((task) => {
-        setSelectedTask(task);
-    }, []);
-
-    const handleClose = useCallback(() => {
-        setSelectedTask(null);
-    }, []);
+    const handleOpen = useCallback((task) => setSelectedTask(task), []);
+    const handleClose = useCallback(() => setSelectedTask(null), []);
 
     const handleToggleComplete = useCallback(async (task) => {
         const isCompleted = task.completed || task.status === "COMPLETED";
-        if (isCompleted) {
-            await uncompleteTask(task.id);
-        } else {
-            await completeTask(task.id);
-        }
+        if (isCompleted) await uncompleteTask(task.id);
+        else await completeTask(task.id);
     }, [completeTask, uncompleteTask]);
 
     const handleSearchSubmit = (e) => {
@@ -82,9 +158,7 @@ function TasksPageInner() {
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchInput(value);
-        if (!value.trim()) {
-            updateFilters({ search: "" });
-        }
+        if (!value.trim()) updateFilters({ search: "" });
     };
 
     const clearSearch = () => {
@@ -95,6 +169,7 @@ function TasksPageInner() {
     return (
         <div className="w-full min-h-[calc(100vh-4rem)]">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 pb-24 sm:pb-20">
+
                 {/* Page Header */}
                 <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-5">
                     <div className="flex items-center gap-3">
@@ -118,12 +193,12 @@ function TasksPageInner() {
                     )}
                 </header>
 
-                {/* Quick Task Creation Input */}
+                {/* Quick Task Creation */}
                 <section aria-label="Create Task">
                     <TaskInput />
                 </section>
 
-                {/* Search & Filters Controls */}
+                {/* Search & Filters */}
                 <section className="space-y-3" aria-label="Task Filters">
                     <form onSubmit={handleSearchSubmit} className="relative">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
@@ -145,27 +220,23 @@ function TasksPageInner() {
                             </button>
                         )}
                     </form>
-
                     <TaskFilters />
                 </section>
 
-                {/* Task List */}
-                <main className="space-y-3">
+                {/* Task List — grouped by date bucket */}
+                <main className="space-y-5">
                     {!loading && tasks.length > 0 && (
                         <>
-                            <div className="space-y-2.5">
-                                <AnimatePresence mode="popLayout">
-                                    {tasks.map((task) => (
-                                        <TaskCard
-                                            key={task.id}
-                                            task={task}
-                                            onOpen={handleOpen}
-                                            onToggleComplete={handleToggleComplete}
-                                        />
-                                    ))}
-                                </AnimatePresence>
-                            </div>
-
+                            {groups.map(group => (
+                                <TaskGroup
+                                    key={group.key}
+                                    group={group}
+                                    onOpen={handleOpen}
+                                    onToggleComplete={handleToggleComplete}
+                                    // Collapse completed by default — hides old recurring instances
+                                    defaultOpen={group.key !== "completed"}
+                                />
+                            ))}
                             <Pagination
                                 currentPage={page}
                                 totalPages={pagination?.totalPages ?? 1}
@@ -210,7 +281,7 @@ function TasksPageInner() {
                 </main>
             </div>
 
-            {/* Task Detail / Editing Sheet */}
+            {/* Task Detail Sheet */}
             <AnimatePresence>
                 {selectedTask && (
                     <TaskDetailSheet task={selectedTask} onClose={handleClose} />
