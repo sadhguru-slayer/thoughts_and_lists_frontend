@@ -2,13 +2,15 @@
 
 import { use, useEffect, useState, useCallback } from "react";
 import { useNotebooks } from "@/lib/NotebooksContext";
-import { ChevronLeft, Save, Trash2, Loader2, Clock, Folder } from "lucide-react";
+import { ChevronLeft, Save, Trash2, Loader2, Clock, Folder, Star, Pin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notify } from "@/lib/notify";
 import { formatNoteDate } from "@/lib/formatDate";
 import { useModal } from "@/lib/ModalContext";
 import MoveNoteModal from "@/components/notebooks/MoveNoteModal";
+import TiptapEditor from "@/components/thoughts/TiptapEditor";
+import { cn } from "@/lib/utils";
 
 export default function NoteDetailPage({ params }) {
     const resolvedParams = use(params);
@@ -19,6 +21,8 @@ export default function NoteDetailPage({ params }) {
     const [note, setNote] = useState(null);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
+    const [isPinned, setIsPinned] = useState(false);
+    const [isStarred, setIsStarred] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState(null);
@@ -34,6 +38,8 @@ export default function NoteDetailPage({ params }) {
                     setNote(data);
                     setTitle(data.title || "");
                     setContent(data.content || "");
+                    setIsPinned(data.is_pinned || false);
+                    setIsStarred(data.is_starred || false);
                     setLastSaved(data.updated_at || data.created_at);
                 }
             } catch (err) {
@@ -62,6 +68,18 @@ export default function NoteDetailPage({ params }) {
             setSaving(false);
         }
     }, [noteId, title, content, editNote]);
+
+    const handleToggleStar = async () => {
+        const newVal = !isStarred;
+        setIsStarred(newVal);
+        await editNote(noteId, { is_starred: newVal });
+    };
+
+    const handleTogglePin = async () => {
+        const newVal = !isPinned;
+        setIsPinned(newVal);
+        await editNote(noteId, { is_pinned: newVal });
+    };
 
     // Keyboard shortcut: Cmd+S / Ctrl+S to save
     useEffect(() => {
@@ -93,8 +111,8 @@ export default function NoteDetailPage({ params }) {
         }
     };
 
-    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
-    const charCount = content.length;
+    const wordCount = content.trim() ? content.replace(/<[^>]*>?/gm, '').trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+    const charCount = content.replace(/<[^>]*>?/gm, '').length;
 
     if (loading) {
         return (
@@ -138,6 +156,34 @@ export default function NoteDetailPage({ params }) {
                         <Clock className="w-3 h-3" />
                         <span>{lastSaved ? `Saved ${formatNoteDate(lastSaved)}` : "Unsaved"}</span>
                     </div>
+
+                    <button
+                        type="button"
+                        onClick={handleToggleStar}
+                        className={cn(
+                            "p-1.5 rounded-xl border transition-all",
+                            isStarred
+                                ? "text-amber-500 border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30"
+                                : "text-zinc-400 border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        )}
+                        title={isStarred ? "Unstar note" : "Star note"}
+                    >
+                        <Star className="w-4 h-4" fill={isStarred ? "currentColor" : "none"} />
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleTogglePin}
+                        className={cn(
+                            "p-1.5 rounded-xl border transition-all",
+                            isPinned
+                                ? "text-blue-500 border-blue-200 dark:border-blue-800/60 bg-blue-50 dark:bg-blue-950/30"
+                                : "text-zinc-400 border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        )}
+                        title={isPinned ? "Unpin note" : "Pin note"}
+                    >
+                        <Pin className="w-4 h-4" fill={isPinned ? "currentColor" : "none"} />
+                    </button>
 
                     <button
                         onClick={() => setIsMoveOpen(true)}
@@ -198,12 +244,15 @@ export default function NoteDetailPage({ params }) {
                 </div>
                 
                 {/* Content Body */}
-                <textarea
-                    placeholder="Start typing your thoughts, ideas, lists, or notes here..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="w-full flex-1 min-h-[350px] resize-none bg-transparent text-sm sm:text-base text-zinc-800 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none dark:text-zinc-200 leading-relaxed font-normal border-none p-0"
-                />
+                <div className="w-full flex-1 min-h-[350px]">
+                    <TiptapEditor
+                        content={content}
+                        onChange={setContent}
+                        placeholder="Start typing your thoughts, ideas, lists, or notes here..."
+                        disabled={saving}
+                        autoFocus={true}
+                    />
+                </div>
             </div>
 
             {/* Move Note Modal */}

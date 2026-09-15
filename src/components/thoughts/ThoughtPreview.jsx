@@ -32,8 +32,11 @@ export default function ThoughtPreview({ thought, onClose }) {
         if (!thought?.id && !thought?.uuid) return;
 
         let cancelled = false;
-        setLoading(true);
-        setError(null);
+        setTimeout(() => {
+            if (cancelled) return;
+            setLoading(true);
+            setError(null);
+        }, 0);
 
         const targetId = thought.uuid || thought.id;
         fetchThoughtById(targetId)

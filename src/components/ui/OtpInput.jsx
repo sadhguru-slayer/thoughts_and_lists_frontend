@@ -1,14 +1,15 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 
 export default function OtpInput({ value = "", onChange, length = 6 }) {
     const inputsRef = useRef([]);
 
-    // Ensure inputsRef.current matches length
-    if (inputsRef.current.length !== length) {
-        inputsRef.current = Array(length).fill(null).map((_, i) => inputsRef.current[i] || null);
-    }
+    useEffect(() => {
+        if (inputsRef.current.length !== length) {
+            inputsRef.current = Array(length).fill(null).map((_, i) => inputsRef.current[i] || null);
+        }
+    }, [length]);
 
     const otpArray = value.split("").concat(Array(length).fill("")).slice(0, length);
 

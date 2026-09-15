@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import Cookies from "js-cookie";
 import axios from "axios";
 import api, { baseURL } from "./api";
@@ -15,6 +15,18 @@ export function AuthProvider({ children }) {
     const router = useRouter();
     const pathname = usePathname();
 
+    const logout = useCallback(() => {
+        Cookies.remove("access_token", { path: "/" });
+        Cookies.remove("refresh_token", { path: "/" });
+        setUser(null);
+
+        if (pathname === "/") {
+            router.replace("/");
+        } else {
+            router.replace("/login");
+        }
+    }, [pathname, router]);
+
     useEffect(() => {
         const token = Cookies.get("access_token");
         if (token) {
@@ -27,7 +39,7 @@ export function AuthProvider({ children }) {
         };
         window.addEventListener("auth-unauthorized", handleUnauthorized);
         return () => window.removeEventListener("auth-unauthorized", handleUnauthorized);
-    }, []);
+    }, [logout]);
 
     useEffect(() => {
         if (!loading) {
@@ -127,19 +139,7 @@ export function AuthProvider({ children }) {
         router.push(returnTo || "/dashboard");
     };
 
-    const logout = () => {
-        Cookies.remove("access_token", { path: "/" });
-        Cookies.remove("refresh_token", { path: "/" });
-        setUser(null);
 
-        // console.log(pathname);
-
-        if (pathname === "/") {
-            router.replace("/");
-        } else {
-            router.replace("/login");
-        }
-    };
 
     const getMe = async () => {
         const res = await api.get("/api/v1/auth/me");

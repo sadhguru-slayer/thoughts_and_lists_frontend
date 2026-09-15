@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState, useMemo } from "react";
 import { useNotebooks } from "@/lib/NotebooksContext";
-import { ChevronLeft, Trash2, Search, Folder, FileText, ArrowUpDown, Edit3, ArrowRight } from "lucide-react";
+import { ChevronLeft, Trash2, Search, Folder, FileText, ArrowUpDown, Edit3, ArrowRight, Star, Pin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatNoteDate } from "@/lib/formatDate";
@@ -293,8 +293,8 @@ export default function NotebookDetailPage({ params }) {
                                             {note.title || "Untitled Note"}
                                         </h3>
 
-                                        {/* Action buttons (Move / Delete) */}
-                                        <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {/* Action buttons (Move / Delete / Star / Pin) */}
+                                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
@@ -306,6 +306,32 @@ export default function NotebookDetailPage({ params }) {
                                                 title="Move note to another space or Quick Notes"
                                             >
                                                 <Folder className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    await editNote(note.uuid, { is_starred: !note.is_starred });
+                                                    loadNotebook();
+                                                }}
+                                                className={cn("p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors touch-manipulation", note.is_starred ? "text-amber-500 opacity-100" : "text-zinc-400")}
+                                                title={note.is_starred ? "Unstar note" : "Star note"}
+                                            >
+                                                <Star className="w-3.5 h-3.5" fill={note.is_starred ? "currentColor" : "none"} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    await editNote(note.uuid, { is_pinned: !note.is_pinned });
+                                                    loadNotebook();
+                                                }}
+                                                className={cn("p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors touch-manipulation", note.is_pinned ? "text-blue-500 opacity-100" : "text-zinc-400")}
+                                                title={note.is_pinned ? "Unpin note" : "Pin note"}
+                                            >
+                                                <Pin className="w-3.5 h-3.5" fill={note.is_pinned ? "currentColor" : "none"} />
                                             </button>
                                             <button
                                                 type="button"
@@ -327,6 +353,11 @@ export default function NotebookDetailPage({ params }) {
 
                                 <div className="mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/70 flex items-center justify-between text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">
                                     <span>{formatNoteDate(note.created_at || note.updated_at)}</span>
+                                    {note.is_pinned && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded-md font-semibold">
+                                            <Pin className="w-2.5 h-2.5" /> Pinned
+                                        </span>
+                                    )}
                                 </div>
                             </Link>
                         );
