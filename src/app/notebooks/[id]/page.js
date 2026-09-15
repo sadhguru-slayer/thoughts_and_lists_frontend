@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatNoteDate } from "@/lib/formatDate";
 import { cn, stripHtml } from "@/lib/utils";
+import { useModal } from "@/lib/ModalContext";
 import ThoughtInput from "@/components/thoughts/ThoughtInput";
 import MoveNoteModal from "@/components/notebooks/MoveNoteModal";
 
@@ -60,10 +61,18 @@ export default function NotebookDetailPage({ params }) {
         }));
     };
 
+    const { showConfirm } = useModal();
+
     const handleDeleteNote = async (e, noteUuid) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!confirm("Delete this note?")) return;
+        const confirmed = await showConfirm({
+            title: "Delete Note?",
+            description: "Are you sure you want to permanently delete this note?",
+            confirmText: "Delete",
+            variant: "danger"
+        });
+        if (!confirmed) return;
         try {
             await deleteNote(noteUuid);
             setNotebook((prev) => ({

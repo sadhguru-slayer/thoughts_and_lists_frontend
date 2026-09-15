@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Plus, Trash2, X, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useModal } from "@/lib/ModalContext";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -279,6 +280,7 @@ export default function JournalCreateForm({
   onSubmit,
   onDeleteTemplate,
 }) {
+  const { showConfirm } = useModal();
   const [localDatetime, setLocalDatetime] = useState("");
   const [ready, setReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -558,16 +560,22 @@ export default function JournalCreateForm({
                   <button
                     type="button"
                     onClick={async () => {
-                      if (window.confirm("Make this template inactive? You won't be able to insert it again.")) {
-                        try {
-                          setIsSubmitting(true);
-                          await onDeleteTemplate(selectedTemplateId);
-                          setSelectedTemplateId("");
-                        } catch (err) {
-                          console.error(err);
-                        } finally {
-                          setIsSubmitting(false);
-                        }
+                      const confirmed = await showConfirm({
+                        title: "Deactivate Template?",
+                        description: "Make this template inactive? You won't be able to insert it again.",
+                        confirmText: "Deactivate",
+                        variant: "warning"
+                      });
+                      if (!confirmed) return;
+
+                      try {
+                        setIsSubmitting(true);
+                        await onDeleteTemplate(selectedTemplateId);
+                        setSelectedTemplateId("");
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setIsSubmitting(false);
                       }
                     }}
                     disabled={selectedTemplateId === "" || isSubmitting}

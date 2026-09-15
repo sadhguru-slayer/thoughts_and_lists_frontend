@@ -10,6 +10,7 @@ import { useThoughts } from "@/lib/ThoughtsContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash2, CheckSquare, X, Loader2, StickyNote, Search, Pin, ListFilter, ArrowUpDown } from "lucide-react";
 import { notify } from "@/lib/notify";
+import { useModal } from "@/lib/ModalContext";
 import Link from "next/link";
 
 function ThoughtsPageInner() {
@@ -68,11 +69,22 @@ function ThoughtsPageInner() {
         }
     };
 
+    const { showConfirm } = useModal();
+
     const handleBulkDelete = async () => {
+        const count = selectedIds.length;
+        const confirmed = await showConfirm({
+            title: `Delete ${count} Note${count > 1 ? "s" : ""}?`,
+            description: `Are you sure you want to delete ${count} selected note${count > 1 ? "s" : ""}? This action cannot be undone.`,
+            confirmText: `Delete ${count}`,
+            variant: "danger"
+        });
+        if (!confirmed) return;
+
         setIsDeleting(true);
         try {
             await deleteThoughts(selectedIds);
-            notify.success(`${selectedIds.length} note${selectedIds.length > 1 ? "s" : ""} deleted`);
+            notify.success(`${count} note${count > 1 ? "s" : ""} deleted`);
             setSelectedIds([]);
         } catch (err) {
             notify.error("Failed to delete notes");

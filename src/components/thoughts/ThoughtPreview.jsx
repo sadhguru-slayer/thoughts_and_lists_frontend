@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Edit2, Trash2, Loader2, Star, Pin, Folder } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useThoughts } from "@/lib/ThoughtsContext";
+import { useModal } from "@/lib/ModalContext";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import MoveNoteModal from "@/components/notebooks/MoveNoteModal";
@@ -49,10 +50,16 @@ export default function ThoughtPreview({ thought, onClose }) {
         return () => { cancelled = true; };
     }, [thought?.id, thought?.uuid, fetchThoughtById]);
 
-    const displayThought = fullThought || thought;
-    const targetId = displayThought.uuid || displayThought.id || thought.uuid || thought.id;
+    const { showConfirm } = useModal();
 
     const handleDelete = async () => {
+        const confirmed = await showConfirm({
+            title: "Delete Note?",
+            description: "Are you sure you want to permanently delete this note?",
+            confirmText: "Delete",
+            variant: "danger"
+        });
+        if (!confirmed) return;
         await deleteThought(targetId);
         onClose();
     };

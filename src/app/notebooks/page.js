@@ -6,6 +6,7 @@ import { Plus, Search, Folder, BookOpen, Trash2, Edit3, MoreVertical, FileText, 
 import Link from "next/link";
 import { formatNoteDate } from "@/lib/formatDate";
 import { cn } from "@/lib/utils";
+import { useModal } from "@/lib/ModalContext";
 
 // Subtle pastel theme palettes for notebook covers
 const THEME_STYLES = [
@@ -53,6 +54,7 @@ function getTheme(index) {
 
 export default function NotebooksPage() {
     const { notebooks, loading, addNotebook, editNotebook, deleteNotebook } = useNotebooks();
+    const { showConfirm } = useModal();
     const [searchQuery, setSearchQuery] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [name, setName] = useState("");
@@ -105,7 +107,13 @@ export default function NotebooksPage() {
     const handleDelete = async (e, notebookUuid, notebookName) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!confirm(`Are you sure you want to delete "${notebookName}" and all of its notes?`)) return;
+        const confirmed = await showConfirm({
+            title: `Delete "${notebookName}"?`,
+            description: "This will permanently remove this space and all of its notes. This action cannot be undone.",
+            confirmText: "Delete Space",
+            variant: "danger"
+        });
+        if (!confirmed) return;
         try {
             await deleteNotebook(notebookUuid);
         } catch (err) {

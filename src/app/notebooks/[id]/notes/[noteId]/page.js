@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notify } from "@/lib/notify";
 import { formatNoteDate } from "@/lib/formatDate";
+import { useModal } from "@/lib/ModalContext";
 import MoveNoteModal from "@/components/notebooks/MoveNoteModal";
 
 export default function NoteDetailPage({ params }) {
@@ -74,8 +75,16 @@ export default function NoteDetailPage({ params }) {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleSave]);
 
+    const { showConfirm } = useModal();
+
     const handleDelete = async () => {
-        if (!confirm("Are you sure you want to delete this note?")) return;
+        const confirmed = await showConfirm({
+            title: "Delete Note?",
+            description: "Are you sure you want to permanently delete this note? This action cannot be undone.",
+            confirmText: "Delete",
+            variant: "danger"
+        });
+        if (!confirmed) return;
         try {
             await deleteNote(noteId);
             router.push(`/notebooks/${notebookId}`);

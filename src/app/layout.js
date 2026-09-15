@@ -4,6 +4,7 @@ import { JournalProvider } from "@/lib/JournalContext";
 import { ThoughtsProvider } from "@/lib/ThoughtsContext";
 import { NotebooksProvider } from "@/lib/NotebooksContext";
 import { TasksProvider } from "@/lib/TasksContext";
+import { ModalProvider } from "@/lib/ModalContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/journal/Header";
 import { Toaster } from "sonner";
@@ -56,12 +57,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
-      <body className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-zinc-50 font-sans antialiased dark:bg-zinc-950 flex flex-col justify-between`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Toaster
             richColors
@@ -75,18 +72,20 @@ export default function RootLayout({ children }) {
             }}
           />
           <AuthProvider>
-            <ThoughtsProvider>
-              <TasksProvider>
-                <NotebooksProvider>
-                  <JournalProvider>
-                    <Header />
-                    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-6 sm:px-6">
-                      {children}
-                    </main>
-                  </JournalProvider>
-                </NotebooksProvider>
-              </TasksProvider>
-            </ThoughtsProvider>
+            <ModalProvider>
+              <ThoughtsProvider>
+                <TasksProvider>
+                  <NotebooksProvider>
+                    <JournalProvider>
+                      <Header />
+                      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-6 sm:px-6">
+                        {children}
+                      </main>
+                    </JournalProvider>
+                  </NotebooksProvider>
+                </TasksProvider>
+              </ThoughtsProvider>
+            </ModalProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
