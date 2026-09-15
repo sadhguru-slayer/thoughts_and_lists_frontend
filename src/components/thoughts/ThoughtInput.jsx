@@ -7,7 +7,7 @@ import { Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TiptapEditor from "./TiptapEditor";
 
-export default function ThoughtInput() {
+export default function ThoughtInput({ onAdd, placeholder = "Take a note...", className }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
@@ -25,7 +25,11 @@ export default function ThoughtInput() {
 
         try {
             setIsSubmitting(true);
-            await addThought({ title, content });
+            if (onAdd) {
+                await onAdd({ title, content });
+            } else {
+                await addThought({ title, content });
+            }
             setTitle("");
             setContent("");
             setIsExpanded(false);
@@ -34,7 +38,7 @@ export default function ThoughtInput() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [title, content, addThought]);
+    }, [title, content, onAdd, addThought]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -64,7 +68,7 @@ export default function ThoughtInput() {
     };
 
     return (
-        <div className="w-full max-w-xl mx-auto mb-6 relative z-10" ref={formRef}>
+        <div className={cn("w-full max-w-xl mx-auto mb-6 relative z-10", className)} ref={formRef}>
             <motion.div
                 layout
                 transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
@@ -110,7 +114,7 @@ export default function ThoughtInput() {
                         />
                     ) : (
                         <div className="flex w-full items-center">
-                            <span className="text-xs text-zinc-500 dark:text-zinc-400 flex-1">Take a note...</span>
+                            <span className="text-xs text-zinc-500 dark:text-zinc-400 flex-1">{placeholder}</span>
                             <button
                                 type="button"
                                 className="p-1 rounded-full text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-colors ml-2 shrink-0"

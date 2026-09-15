@@ -1,11 +1,12 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Edit2, Trash2, Loader2, Star, Pin } from "lucide-react";
+import { X, Edit2, Trash2, Loader2, Star, Pin, Folder } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useThoughts } from "@/lib/ThoughtsContext";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import MoveNoteModal from "@/components/notebooks/MoveNoteModal";
 
 export default function ThoughtPreview({ thought, onClose }) {
     const router = useRouter();
@@ -13,6 +14,7 @@ export default function ThoughtPreview({ thought, onClose }) {
     const [fullThought, setFullThought] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isMoveOpen, setIsMoveOpen] = useState(false);
 
     useEffect(() => {
         const handleKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -110,6 +112,14 @@ export default function ThoughtPreview({ thought, onClose }) {
                             </div>
 
                             <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMoveOpen(true)}
+                                    className="p-1.5 rounded-lg text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                    title="Move to notebook space"
+                                >
+                                    <Folder className="w-4 h-4" />
+                                </button>
                                 <button
                                     type="button"
                                     onClick={handleToggleStar}
@@ -230,6 +240,17 @@ export default function ThoughtPreview({ thought, onClose }) {
                             </button>
                         </div>
                     </motion.div>
+
+                    {/* Move Note Modal */}
+                    <MoveNoteModal
+                        isOpen={isMoveOpen}
+                        onClose={() => {
+                            setIsMoveOpen(false);
+                            onClose();
+                        }}
+                        noteId={targetId}
+                        isThought={true}
+                    />
                 </>
             )}
         </AnimatePresence>

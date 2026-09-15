@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/AuthContext";
 import { JournalProvider } from "@/lib/JournalContext";
 import { ThoughtsProvider } from "@/lib/ThoughtsContext";
+import { NotebooksProvider } from "@/lib/NotebooksContext";
 import { TasksProvider } from "@/lib/TasksContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/journal/Header";
@@ -76,12 +77,14 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <ThoughtsProvider>
               <TasksProvider>
-                <JournalProvider>
-                  <Header />
-                  <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-6 sm:px-6">
-                    {children}
-                  </main>
-                </JournalProvider>
+                <NotebooksProvider>
+                  <JournalProvider>
+                    <Header />
+                    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-6 sm:px-6">
+                      {children}
+                    </main>
+                  </JournalProvider>
+                </NotebooksProvider>
               </TasksProvider>
             </ThoughtsProvider>
           </AuthProvider>
