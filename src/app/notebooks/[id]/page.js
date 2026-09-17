@@ -16,7 +16,7 @@ export default function NotebookDetailPage({ params }) {
     const { id } = resolvedParams;
     const router = useRouter();
 
-    const { fetchNotebookById, addNote, deleteNote, editNotebook } = useNotebooks();
+    const { fetchNotebookById, addNote, deleteNote, editNotebook, deleteNotebook } = useNotebooks();
     const [notebook, setNotebook] = useState(null);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -156,12 +156,34 @@ export default function NotebookDetailPage({ params }) {
                         <ChevronLeft className="w-4 h-4" /> All Spaces
                     </Link>
 
-                    <button
-                        onClick={() => setIsEditingMeta(true)}
-                        className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-xs flex items-center gap-1"
-                    >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit Space
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsEditingMeta(true)}
+                            className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-xs flex items-center gap-1"
+                        >
+                            <Edit3 className="w-3.5 h-3.5" /> Edit Space
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const confirmed = await showConfirm({
+                                    title: `Delete "${notebook.name}"?`,
+                                    description: "This will permanently remove this space and all of its notes. This action cannot be undone.",
+                                    confirmText: "Delete Space",
+                                    variant: "danger"
+                                });
+                                if (!confirmed) return;
+                                try {
+                                    await deleteNotebook(id);
+                                    router.push('/notebooks');
+                                } catch (err) {
+                                    console.error(err);
+                                }
+                            }}
+                            className="p-1.5 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-xs flex items-center gap-1"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete Space
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex items-start gap-3.5">
