@@ -27,7 +27,7 @@ export default function JournalsPage() {
   const [viewMode, setViewMode] = useState("timeline"); // "timeline" | "grid"
 
   return (
-    <div className="w-full flex-1 pt-6 px-4 md:px-0 pb-28 space-y-6">
+    <div className="w-full space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-5">
         <div>
@@ -44,7 +44,7 @@ export default function JournalsPage() {
           <button
             type="button"
             onClick={() => setShowAnalytics((prev) => !prev)}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-all active:scale-95 cursor-pointer shadow-2xs ${
               showAnalytics
                 ? "bg-zinc-100 border-zinc-300 text-zinc-900 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
                 : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
@@ -56,7 +56,7 @@ export default function JournalsPage() {
 
           <Link
             href="/journals/write"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold px-4 py-2 transition-all active:scale-95 shadow-2xs"
+            className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold px-4 py-2 transition-all active:scale-95 shadow-2xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New Entry</span>
@@ -71,7 +71,7 @@ export default function JournalsPage() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Search Input */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search all entries..."
@@ -81,7 +81,7 @@ export default function JournalsPage() {
               clearTimeout(window._journalSearchTimer);
               window._journalSearchTimer = setTimeout(() => handleSearch(val), 400);
             }}
-            className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-400/20 focus:border-zinc-400 dark:text-zinc-200 placeholder:text-zinc-400 transition-all"
+            className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-500 dark:text-zinc-200 placeholder:text-zinc-400 transition-all shadow-2xs"
           />
         </div>
 
@@ -89,11 +89,11 @@ export default function JournalsPage() {
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           {/* Date Filter Dropdown */}
           <div className="relative flex items-center shrink-0">
-            <ListFilter className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <ListFilter className="absolute left-3 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             <select
               value={dateFilter}
               onChange={(e) => handleDateFilterChange(e.target.value)}
-              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full pl-8 pr-4 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none shadow-2xs"
             >
               <option value="all">All Time</option>
               <option value="this_month">This Month</option>
@@ -103,11 +103,11 @@ export default function JournalsPage() {
 
           {/* Sort Order Dropdown */}
           <div className="relative flex items-center shrink-0">
-            <ArrowUpDown className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <ArrowUpDown className="absolute left-3 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             <select
               value={sortOrder}
               onChange={(e) => handleSortChange(e.target.value)}
-              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full pl-8 pr-4 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none shadow-2xs"
             >
               <option value="desc">Newest First</option>
               <option value="asc">Oldest First</option>
@@ -115,11 +115,11 @@ export default function JournalsPage() {
           </div>
 
           {/* View Mode Switcher */}
-          <div className="flex items-center p-0.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
+          <div className="flex items-center p-1 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0 gap-1">
             <button
               type="button"
               onClick={() => setViewMode("timeline")}
-              className={`p-1.5 rounded-lg text-xs transition-all ${
+              className={`px-3 py-1 rounded-full text-xs transition-all ${
                 viewMode === "timeline"
                   ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold"
                   : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
@@ -131,7 +131,7 @@ export default function JournalsPage() {
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded-lg text-xs transition-all ${
+              className={`px-3 py-1 rounded-full text-xs transition-all ${
                 viewMode === "grid"
                   ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold"
                   : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"

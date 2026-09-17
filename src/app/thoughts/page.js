@@ -150,16 +150,16 @@ function ThoughtsPageInner() {
                 </div>
 
                 {/* Segmented Tabs */}
-                <div className="inline-flex p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-xl gap-1">
+                <div className="inline-flex p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-full gap-1 border border-zinc-200/50 dark:border-zinc-800/50">
                     <button 
-                        className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 shadow-2xs transition-all"
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 shadow-2xs transition-all"
                     >
                         <StickyNote className="w-3.5 h-3.5" />
                         Quick Notes
                     </button>
                     <Link
                         href="/notebooks"
-                        className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-white/50 dark:hover:bg-zinc-900/50 transition-all"
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-white/50 dark:hover:bg-zinc-900/50 transition-all"
                     >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -180,18 +180,18 @@ function ThoughtsPageInner() {
                             placeholder="Search notes..."
                             value={searchQuery}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-500 transition-all dark:text-zinc-200 placeholder:text-zinc-400 shadow-2xs"
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-500 transition-all dark:text-zinc-200 placeholder:text-zinc-400 shadow-2xs"
                         />
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
                         {/* Filter Dropdown */}
                         <div className="relative flex items-center shrink-0">
-                            <ListFilter className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                            <ListFilter className="absolute left-3 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
                             <select
                                 value={filterType}
                                 onChange={(e) => setFilterType(e.target.value)}
-                                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none shadow-2xs"
+                                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full pl-8 pr-4 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none shadow-2xs"
                             >
                                 <option value="all">All Notes</option>
                                 <option value="pinned">Pinned Only</option>
@@ -201,11 +201,11 @@ function ThoughtsPageInner() {
 
                         {/* Sort Dropdown */}
                         <div className="relative flex items-center shrink-0">
-                            <ArrowUpDown className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                            <ArrowUpDown className="absolute left-3 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
                             <select
                                 value={sortOrder}
                                 onChange={(e) => setSortOrder(e.target.value)}
-                                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none shadow-2xs"
+                                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full pl-8 pr-4 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer appearance-none shadow-2xs"
                             >
                                 <option value="newest">Newest First</option>
                                 <option value="oldest">Oldest First</option>

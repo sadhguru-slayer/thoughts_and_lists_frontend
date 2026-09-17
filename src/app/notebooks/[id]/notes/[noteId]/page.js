@@ -187,7 +187,7 @@ export default function NoteDetailPage({ params }) {
 
                     <button
                         onClick={() => setIsMoveOpen(true)}
-                        className="flex items-center gap-1.5 p-2 text-zinc-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-xs font-medium"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-zinc-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-xs font-medium"
                         title="Move to another space"
                     >
                         <Folder className="w-3.5 h-3.5" />
@@ -196,7 +196,7 @@ export default function NoteDetailPage({ params }) {
 
                     <button
                         onClick={handleDelete}
-                        className="p-2 text-zinc-400 hover:text-red-500 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                        className="p-2 text-zinc-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
                         title="Delete note"
                     >
                         <Trash2 className="h-4 w-4" />
@@ -205,7 +205,7 @@ export default function NoteDetailPage({ params }) {
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-1.5 rounded-xl bg-zinc-900 px-3.5 py-1.5 text-xs font-semibold text-white transition-all hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 disabled:opacity-50 shadow-2xs active:scale-95 ml-1"
+                        className="flex items-center gap-1.5 rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold text-white transition-all hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 disabled:opacity-50 shadow-2xs active:scale-95 ml-1"
                     >
                         {saving ? (
                             <>

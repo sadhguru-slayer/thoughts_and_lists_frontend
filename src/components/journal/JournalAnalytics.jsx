@@ -27,31 +27,31 @@ export default function JournalAnalytics() {
     }
 
     const stats = [
-        { label: "Total Entries", value: analytics.total_journals ?? 0, icon: BookOpen },
-        { label: "Words Written", value: (analytics.total_words ?? 0).toLocaleString(), icon: Edit3 },
-        { label: "Current Streak", value: `${analytics.current_streak ?? 0} days`, icon: Flame },
-        { label: "Longest Streak", value: `${analytics.longest_streak ?? 0} days`, icon: TrendingUp },
+        { label: "Total Entries", value: analytics.total_journals ?? 0, icon: BookOpen, iconColor: "text-zinc-700 dark:text-zinc-300" },
+        { label: "Words Written", value: (analytics.total_words ?? 0).toLocaleString(), icon: Edit3, iconColor: "text-blue-600 dark:text-blue-400" },
+        { label: "Current Streak", value: `${analytics.current_streak ?? 0} days`, icon: Flame, iconColor: "text-amber-500 dark:text-amber-400" },
+        { label: "Longest Streak", value: `${analytics.longest_streak ?? 0} days`, icon: TrendingUp, iconColor: "text-emerald-600 dark:text-emerald-400" },
     ];
 
     return (
         <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-1"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3"
         >
             {stats.map((stat, idx) => (
                 <div
                     key={idx}
-                    className="flex items-center gap-3 p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/80 transition-all hover:border-zinc-300 dark:hover:border-zinc-700"
+                    className="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xs border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-all hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xs"
                 >
-                    <div className="p-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200/50 dark:border-zinc-700/50 text-zinc-600 dark:text-zinc-300 shrink-0">
-                        <stat.icon className="w-4 h-4" />
+                    <div className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
+                        <stat.icon className={`w-4 h-4 ${stat.iconColor}`} />
                     </div>
                     <div className="min-w-0">
-                        <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 block truncate">
+                        <span className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 block truncate leading-tight">
                             {stat.value}
                         </span>
-                        <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate">
+                        <span className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate mt-0.5">
                             {stat.label}
                         </span>
                     </div>

@@ -99,99 +99,105 @@ export function getPresetDatetime(preset, customTime = "09:00") {
 export function groupTasksByDate(tasks) {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfTomorrow = new Date(startOfToday);
-    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
-    const startOfDayAfterTomorrow = new Date(startOfTomorrow);
-    startOfDayAfterTomorrow.setDate(startOfDayAfterTomorrow.getDate() + 1);
-    const startOfNextWeek = new Date(startOfToday);
-    startOfNextWeek.setDate(startOfNextWeek.getDate() + 7);
+    const thirtyDaysAgo = new Date(startOfToday);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const groups = [
-        { 
-            key: "overdue",   
-            label: "Overdue",     
-            emoji: "🔴", 
-            badgeStyle: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20 dark:border-red-500/30",
-            dotColor: "bg-red-500",
-            tasks: [] 
-        },
-        { 
-            key: "today",     
-            label: "Today",        
-            emoji: "📅", 
-            badgeStyle: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30",
-            dotColor: "bg-amber-500",
-            tasks: [] 
-        },
-        { 
-            key: "tomorrow",  
-            label: "Tomorrow",     
-            emoji: "🌅", 
-            badgeStyle: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 dark:border-blue-500/30",
-            dotColor: "bg-blue-500",
-            tasks: [] 
-        },
-        { 
-            key: "this_week", 
-            label: "This Week",    
-            emoji: "📆", 
-            badgeStyle: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 dark:border-indigo-500/30",
-            dotColor: "bg-indigo-500",
-            tasks: [] 
-        },
-        { 
-            key: "later",     
-            label: "Later",        
-            emoji: "🗓️",  
-            badgeStyle: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20 dark:border-zinc-500/30",
-            dotColor: "bg-zinc-400",
-            tasks: [] 
-        },
-        { 
-            key: "no_date",   
-            label: "No Due Date",  
-            emoji: "📋", 
-            badgeStyle: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20 dark:border-zinc-500/30",
-            dotColor: "bg-zinc-400",
-            tasks: [] 
-        },
-        { 
-            key: "completed", 
-            label: "Completed",    
-            emoji: "✅", 
-            badgeStyle: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30",
-            dotColor: "bg-emerald-500",
-            tasks: [] 
-        },
-    ];
+    const overdueGroup = {
+        key: "overdue",
+        label: "Overdue",
+        emoji: "🔴",
+        badgeStyle: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20 dark:border-red-500/30",
+        dotColor: "bg-red-500",
+        tasks: [],
+    };
+    const olderGroup = {
+        key: "older",
+        label: "Older (> 1 month)",
+        emoji: "📦",
+        badgeStyle: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20 dark:border-zinc-500/30",
+        dotColor: "bg-zinc-500",
+        tasks: [],
+    };
+    const noDateGroup = {
+        key: "no_date",
+        label: "No Due Date",
+        emoji: "📋",
+        badgeStyle: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20 dark:border-zinc-500/30",
+        dotColor: "bg-zinc-400",
+        tasks: [],
+    };
+    const completedGroup = {
+        key: "completed",
+        label: "Completed",
+        emoji: "✅",
+        badgeStyle: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30",
+        dotColor: "bg-emerald-500",
+        tasks: [],
+    };
+
+    const dateMap = new Map();
 
     for (const task of tasks) {
         const isDone = task.completed || task.status === "COMPLETED" || task.status === "CANCELLED";
-
         if (isDone) {
-            groups.find(g => g.key === "completed").tasks.push(task);
+            completedGroup.tasks.push(task);
             continue;
         }
 
         if (!task.due_date) {
-            groups.find(g => g.key === "no_date").tasks.push(task);
+            noDateGroup.tasks.push(task);
             continue;
         }
 
         const due = new Date(task.due_date);
+        const dueDateOnly = new Date(due.getFullYear(), due.getMonth(), due.getDate());
 
-        if (due < startOfToday) {
-            groups.find(g => g.key === "overdue").tasks.push(task);
-        } else if (due < startOfTomorrow) {
-            groups.find(g => g.key === "today").tasks.push(task);
-        } else if (due < startOfDayAfterTomorrow) {
-            groups.find(g => g.key === "tomorrow").tasks.push(task);
-        } else if (due < startOfNextWeek) {
-            groups.find(g => g.key === "this_week").tasks.push(task);
+        if (dueDateOnly < startOfToday) {
+            if (dueDateOnly < thirtyDaysAgo) {
+                olderGroup.tasks.push(task);
+            } else {
+                overdueGroup.tasks.push(task);
+            }
         } else {
-            groups.find(g => g.key === "later").tasks.push(task);
+            const dateKey = `${dueDateOnly.getFullYear()}-${String(dueDateOnly.getMonth() + 1).padStart(2, '0')}-${String(dueDateOnly.getDate()).padStart(2, '0')}`;
+            if (!dateMap.has(dateKey)) {
+                let label = '';
+                const diffDays = Math.round((dueDateOnly - startOfToday) / (1000 * 60 * 60 * 24));
+                const weekday = dueDateOnly.toLocaleDateString('en-US', { weekday: 'short' });
+                const monthDay = dueDateOnly.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                if (diffDays === 0) {
+                    label = `Today • ${weekday}, ${monthDay}`;
+                } else if (diffDays === 1) {
+                    label = `Tomorrow • ${weekday}, ${monthDay}`;
+                } else {
+                    label = `${weekday}, ${monthDay}`;
+                }
+
+                dateMap.set(dateKey, {
+                    key: `date-${dateKey}`,
+                    label,
+                    emoji: "📅",
+                    badgeStyle: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 dark:border-blue-500/30",
+                    dotColor: "bg-blue-500",
+                    dateValue: dueDateOnly.getTime(),
+                    tasks: [],
+                });
+            }
+            dateMap.get(dateKey).tasks.push(task);
         }
     }
 
-    return groups.filter(g => g.tasks.length > 0);
+    const sortedDateGroups = Array.from(dateMap.values()).sort((a, b) => a.dateValue - b.dateValue);
+
+    const clusterList = [];
+    if (overdueGroup.tasks.length > 0) clusterList.push(overdueGroup);
+    for (const dg of sortedDateGroups) {
+        if (dg.tasks.length > 0) clusterList.push(dg);
+    }
+    if (noDateGroup.tasks.length > 0) clusterList.push(noDateGroup);
+    if (olderGroup.tasks.length > 0) clusterList.push(olderGroup);
+    if (completedGroup.tasks.length > 0) clusterList.push(completedGroup);
+
+    return clusterList;
 }

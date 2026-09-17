@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Plus, Trash2, X, GripVertical } from "lucide-react";
+import { Loader2, Plus, Trash2, X, GripVertical, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useModal } from "@/lib/ModalContext";
 import RichTextEditor from "@/components/ui/RichTextEditor";
@@ -105,10 +105,76 @@ const FIELD_TYPES = [
   { value: "checkbox", label: "Checkbox" },
 ];
 
-const inputClass = "w-full rounded-xl border border-zinc-200 bg-white/50 backdrop-blur-sm px-4 py-3 text-sm font-medium text-zinc-900 shadow-sm focus-visible:border-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-100 dark:focus-visible:ring-zinc-600 dark:focus-visible:border-zinc-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed";
+const inputClass =
+  "w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-900 shadow-sm focus-visible:border-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus-visible:ring-zinc-600 dark:focus-visible:border-zinc-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed";
 
-const labelClass = "text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block mb-2";
+const labelClass =
+  "text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block mb-2";
 
+// ─── Styled Checkbox ──────────────────────────────────────────────────────────
+// Large, touch-friendly checkbox using a hidden native input + visual element
+function StyledCheckbox({ checked, onChange, disabled, size = "md" }) {
+  const sizeClasses = size === "lg"
+    ? "w-7 h-7 rounded-lg"
+    : "w-6 h-6 rounded-md";
+
+  return (
+    <label className={cn("relative inline-flex items-center cursor-pointer", disabled && "opacity-50 cursor-not-allowed")}>
+      <input
+        type="checkbox"
+        className="sr-only"
+        checked={checked}
+        disabled={disabled}
+        onChange={onChange}
+      />
+      <span
+        className={cn(
+          "flex items-center justify-center border-2 transition-all",
+          sizeClasses,
+          checked
+            ? "bg-zinc-900 border-zinc-900 dark:bg-zinc-100 dark:border-zinc-100"
+            : "bg-white border-zinc-300 dark:bg-zinc-900 dark:border-zinc-600"
+        )}
+      >
+        {checked && (
+          <Check
+            className={cn(
+              "text-white dark:text-zinc-900",
+              size === "lg" ? "w-4 h-4" : "w-3.5 h-3.5"
+            )}
+            strokeWidth={3}
+          />
+        )}
+      </span>
+    </label>
+  );
+}
+
+// ─── Remove / Delete circle button ───────────────────────────────────────────
+function RemoveButton({ onClick, disabled, variant = "x", title = "Remove" }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      title={title}
+      className={cn(
+        "flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full transition-all disabled:opacity-50",
+        variant === "trash"
+          ? "bg-zinc-100 text-zinc-400 hover:bg-red-100 hover:text-red-600 dark:bg-zinc-800 dark:text-zinc-500 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+          : "bg-zinc-100 text-zinc-400 hover:bg-red-100 hover:text-red-600 dark:bg-zinc-800 dark:text-zinc-500 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+      )}
+    >
+      {variant === "trash" ? (
+        <Trash2 className="w-3.5 h-3.5" />
+      ) : (
+        <X className="w-3.5 h-3.5" />
+      )}
+    </button>
+  );
+}
+
+// ─── Sortable field row ───────────────────────────────────────────────────────
 function SortableCustomFieldRow({ fv, onChange, onRemove, disabled }) {
   const {
     attributes,
@@ -129,45 +195,40 @@ function SortableCustomFieldRow({ fv, onChange, onRemove, disabled }) {
   const renderInput = () => {
     if (fv.field_type === "checkbox") {
       return (
-        <div className="flex flex-1 items-center justify-between gap-3 px-4 py-3">
-          <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+        <div className="flex flex-1 items-center justify-between gap-4 px-4 py-3.5">
+          <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 leading-snug">
             {fv.label}
           </span>
-          <div className="flex flex-col items-end sm:flex-row gap-3 sm:items-center">
-            <label className="flex items-center cursor-pointer gap-2 scale-110 opacity-90 transition-opacity hover:opacity-100">
-              <input
-                type="checkbox"
-                disabled={disabled}
-                checked={fv.value === "true" || fv.value === true}
-                onChange={(e) => onChange(e.target.checked ? "true" : "false")}
-                className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-600 disabled:opacity-50"
-              />
-            </label>
-            <button
-              type="button"
+          <div className="flex items-center gap-3">
+            <StyledCheckbox
+              size="lg"
+              checked={fv.value === "true" || fv.value === true}
               disabled={disabled}
+              onChange={(e) => onChange(e.target.checked ? "true" : "false")}
+            />
+            <RemoveButton
               onClick={onRemove}
-              className="p-1.5 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+              disabled={disabled}
+              variant="trash"
+              title="Remove field"
+            />
           </div>
         </div>
       );
     }
 
     return (
-      <div className="space-y-1 flex-1 py-1 pr-1">
-        <div className="flex items-start justify-between gap-2 px-1">
-          <label className={`${labelClass} mb-1 normal-case tracking-normal`}>{fv.label}</label>
-          <button
-            type="button"
-            disabled={disabled}
+      <div className="flex-1 py-3 pr-3 space-y-2">
+        <div className="flex items-center justify-between gap-2 pl-1">
+          <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+            {fv.label}
+          </label>
+          <RemoveButton
             onClick={onRemove}
-            className="p-1 text-zinc-400 hover:text-red-500 transition-colors rounded-md disabled:opacity-50"
-          >
-            <X className="w-4 h-4" />
-          </button>
+            disabled={disabled}
+            variant="x"
+            title="Remove field"
+          />
         </div>
         {fv.field_type === "richtext" ? (
           <RichTextEditor
@@ -202,17 +263,25 @@ function SortableCustomFieldRow({ fv, onChange, onRemove, disabled }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-start gap-2 group rounded-xl transition-colors ${
+      className={cn(
+        "flex items-start gap-1.5 rounded-2xl transition-colors",
         isDragging
-          ? "bg-zinc-100/80 dark:bg-zinc-800/80 shadow-md ring-1 ring-zinc-300 dark:ring-zinc-600"
-          : "hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30 border border-zinc-100 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40"
-      }`}
+          ? "bg-zinc-100 dark:bg-zinc-800 shadow-md ring-1 ring-zinc-300 dark:ring-zinc-600"
+          : "bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800"
+      )}
     >
+      {/* Drag handle — always visible on mobile, hover-only on desktop */}
       <button
         type="button"
         {...attributes}
         {...listeners}
-        className={`mt-4 ml-2 flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-zinc-500 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ${fv.field_type === 'checkbox' ? 'mt-3.5' : ''}`}
+        className={cn(
+          "mt-4 ml-2 flex-shrink-0 cursor-grab active:cursor-grabbing p-1.5 rounded-lg",
+          "text-zinc-300 dark:text-zinc-600 hover:text-zinc-500 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
+          // On desktop hide until hover; on mobile always show (touch UX)
+          "sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100",
+          fv.field_type === "checkbox" ? "mt-3.5" : ""
+        )}
         title="Drag to reorder"
         aria-label="Drag to reorder field"
       >
@@ -224,28 +293,39 @@ function SortableCustomFieldRow({ fv, onChange, onRemove, disabled }) {
   );
 }
 
+// ─── Add custom fields row ────────────────────────────────────────────────────
 function AddCustomFields({ sectionKey, onAddField, disabled }) {
   const [newLabel, setNewLabel] = useState("");
   const [newType, setNewType] = useState("text");
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-dashed border-zinc-300 bg-white/30 p-4 dark:border-zinc-700 dark:bg-zinc-900/20">
-      <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Add custom field</p>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="w-full sm:min-w-[200px] flex-1">
-          <input
-            type="text"
-            disabled={disabled}
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            placeholder="Field label"
-            className={inputClass}
-          />
-        </div>
-        <div className="w-full sm:w-40 shrink-0">
+    <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-zinc-300 bg-white/50 p-4 dark:border-zinc-700 dark:bg-zinc-900/30">
+      <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+        Add field
+      </p>
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+        <input
+          type="text"
+          disabled={disabled}
+          value={newLabel}
+          onChange={(e) => setNewLabel(e.target.value)}
+          placeholder="Field label…"
+          className={cn(inputClass, "flex-1")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (newLabel.trim()) {
+                onAddField(sectionKey, newLabel, newType);
+                setNewLabel("");
+                setNewType("text");
+              }
+            }
+          }}
+        />
+        <div className="flex gap-2">
           <Select disabled={disabled} value={newType} onValueChange={setNewType}>
-            <SelectTrigger className={cn(inputClass, "h-auto py-3")}>
-              <SelectValue placeholder="Field Type" />
+            <SelectTrigger className={cn(inputClass, "h-auto py-3 w-full sm:w-40 shrink-0")}>
+              <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
               {FIELD_TYPES.map((ft) => (
@@ -255,24 +335,26 @@ function AddCustomFields({ sectionKey, onAddField, disabled }) {
               ))}
             </SelectContent>
           </Select>
+          <button
+            type="button"
+            disabled={disabled || !newLabel.trim()}
+            onClick={() => {
+              onAddField(sectionKey, newLabel, newType);
+              setNewLabel("");
+              setNewType("text");
+            }}
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white shadow transition hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Add</span>
+          </button>
         </div>
-        <button
-          type="button"
-          disabled={disabled || !newLabel.trim()}
-          onClick={() => {
-            onAddField(sectionKey, newLabel, newType);
-            setNewLabel("");
-            setNewType("text");
-          }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white shadow transition hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
-          <Plus className="w-4 h-4" /> Add
-        </button>
       </div>
     </div>
   );
 }
 
+// ─── Main form ────────────────────────────────────────────────────────────────
 export default function JournalCreateForm({
   templates = [],
   latestStructure = null,
@@ -447,7 +529,7 @@ export default function JournalCreateForm({
       });
     } catch (err) {
       console.error(err);
-      setIsSubmitting(false); // Stop loading if failed
+      setIsSubmitting(false);
     }
   };
 
@@ -471,21 +553,22 @@ export default function JournalCreateForm({
       onSubmit={handleSubmit}
       className={cn("space-y-6 pb-12", isSubmitting && "opacity-80 pointer-events-none")}
     >
+      {/* Top action bar */}
       <div className="flex items-center justify-between gap-3 mb-6">
         <button
           type="button"
           disabled={isSubmitting}
           onClick={onCancel}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200/80 bg-white/80 backdrop-blur-md px-4 py-2 text-xs font-semibold text-zinc-800 shadow-xs transition-all hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-100 dark:hover:bg-zinc-900 disabled:opacity-50 active:scale-95"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors py-2 px-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800/60 disabled:opacity-50"
         >
           <X className="w-4 h-4" />
-          Cancel
+          <span>Cancel</span>
         </button>
-        
+
         <button
           type="submit"
           disabled={!canSubmit || isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-blue-500 active:scale-95 disabled:opacity-40"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 px-5 py-2 text-xs font-semibold shadow-2xs transition-all active:scale-95 disabled:opacity-40"
         >
           {isSubmitting ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
@@ -495,7 +578,8 @@ export default function JournalCreateForm({
         </button>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
+        {/* Date & Time */}
         <div>
           <label htmlFor="journal-date" className={labelClass}>
             Date & Time
@@ -510,6 +594,7 @@ export default function JournalCreateForm({
           />
         </div>
 
+        {/* Main content — Rich Text Editor */}
         <div>
           <label className={labelClass}>
             Entry <span className="lowercase font-medium tracking-normal ml-1">(Optional if adding sections)</span>
@@ -524,20 +609,23 @@ export default function JournalCreateForm({
         </div>
       </div>
 
-      <div className="pt-4 space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Sections */}
+      <div className="pt-2 space-y-4">
+        {/* Section controls header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
             Structure
           </h3>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Template selector */}
             {templates.length > 0 && (
-              <div className="flex items-center bg-white/60 dark:bg-zinc-950/60 p-1 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
+              <div className="flex items-center bg-white dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-2xs">
                 <Select
                   value={selectedTemplateId}
                   onValueChange={setSelectedTemplateId}
                   disabled={isSubmitting}
                 >
-                  <SelectTrigger className="w-48 bg-transparent text-xs font-semibold border-none outline-none dark:text-zinc-200 px-3 py-1 cursor-pointer focus:ring-0">
+                  <SelectTrigger className="w-44 bg-transparent text-xs font-semibold border-none outline-none dark:text-zinc-200 px-3 py-1.5 cursor-pointer focus:ring-0">
                     <SelectValue placeholder="Add from template…" />
                   </SelectTrigger>
                   <SelectContent>
@@ -564,7 +652,7 @@ export default function JournalCreateForm({
                         title: "Deactivate Template?",
                         description: "Make this template inactive? You won't be able to insert it again.",
                         confirmText: "Deactivate",
-                        variant: "warning"
+                        variant: "warning",
                       });
                       if (!confirmed) return;
 
@@ -579,23 +667,22 @@ export default function JournalCreateForm({
                       }
                     }}
                     disabled={selectedTemplateId === "" || isSubmitting}
-                    className="flex shrink-0 items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 ml-1 px-2 py-1.5 text-red-600 transition disabled:opacity-50 dark:bg-red-950/30 dark:hover:bg-red-900/40 dark:text-red-400"
+                    className="flex shrink-0 items-center justify-center w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 ml-1 text-red-600 transition disabled:opacity-50 dark:bg-red-950/30 dark:hover:bg-red-900/40 dark:text-red-400"
                     title="Remove template"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
             )}
 
-            <div className="flex items-center gap-3 bg-white/60 dark:bg-zinc-950/60 py-1 pl-3 pr-1 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
-              <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
-                <input
-                  type="checkbox"
+            {/* Custom section controls */}
+            <div className="flex items-center gap-2.5 bg-white dark:bg-zinc-900 py-1.5 pl-3 pr-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-2xs">
+              <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider select-none">
+                <StyledCheckbox
                   checked={newCustomSectionReusable}
                   disabled={isSubmitting}
                   onChange={(e) => setNewCustomSectionReusable(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-600 disabled:opacity-50"
                 />
                 Reusable
               </label>
@@ -611,6 +698,7 @@ export default function JournalCreateForm({
           </div>
         </div>
 
+        {/* Empty state */}
         {draftSections.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-white/30 px-6 py-12 text-center dark:bg-zinc-900/20">
             <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -623,49 +711,38 @@ export default function JournalCreateForm({
               {draftSections.map((sec) => (
                 <motion.article
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.97 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
                   key={sec.clientKey}
-                  className="group relative rounded-3xl border border-zinc-200/80 bg-white/80 backdrop-blur-md p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950/80 overflow-hidden"
+                  className="group relative rounded-3xl border border-zinc-200/80 bg-white backdrop-blur-md p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden"
                 >
-                  <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2 w-full">
-                      {sec.templateId != null ? (
-                        <div className="flex items-center gap-4">
-                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                  {/* Section header row */}
+                  <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex-1 space-y-3 w-full min-w-0">
+                      {/* Badge + reusable toggle */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {sec.templateId != null ? (
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shrink-0">
                             Template
                           </span>
-                          <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-zinc-600 dark:text-zinc-400">
-                            <input
-                              type="checkbox"
-                              checked={sec.reusable !== false}
-                              disabled={isSubmitting}
-                              onChange={(e) => setSectionReusable(sec.clientKey, e.target.checked)}
-                              className="h-3.5 w-3.5 rounded border-zinc-300 text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-600 disabled:opacity-50"
-                            />
-                            Reusable
-                          </label>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-4">
-                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-purple-800 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-purple-800 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200 dark:border-purple-800 shrink-0">
                             Custom
                           </span>
-                          <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-zinc-600 dark:text-zinc-400">
-                            <input
-                              type="checkbox"
-                              checked={sec.reusable !== false}
-                              disabled={isSubmitting}
-                              onChange={(e) => setSectionReusable(sec.clientKey, e.target.checked)}
-                              className="h-3.5 w-3.5 rounded border-zinc-300 text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-600 disabled:opacity-50"
-                            />
-                            Save as template
-                          </label>
-                        </div>
-                      )}
+                        )}
+                        <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 select-none">
+                          <StyledCheckbox
+                            checked={sec.reusable !== false}
+                            disabled={isSubmitting}
+                            onChange={(e) => setSectionReusable(sec.clientKey, e.target.checked)}
+                          />
+                          {sec.templateId != null ? "Reusable" : "Save as template"}
+                        </label>
+                      </div>
 
-                      <div className="mt-2 w-full max-w-lg">
+                      {/* Section title input */}
+                      <div className="w-full">
                         <label className="sr-only" htmlFor={`name-${sec.clientKey}`}>
                           Section Title
                         </label>
@@ -676,22 +753,24 @@ export default function JournalCreateForm({
                           disabled={isSubmitting}
                           onChange={(e) => setSectionName(sec.clientKey, e.target.value)}
                           placeholder="Section Title"
-                          className="w-full text-xl font-bold bg-transparent outline-none placeholder:text-zinc-400 text-zinc-900 dark:text-zinc-100 border-b-2 border-transparent focus:border-zinc-300 dark:focus:border-zinc-700 transition-colors pb-1"
+                          className="w-full text-xl font-bold bg-transparent outline-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700 text-zinc-900 dark:text-zinc-100 border-b-2 border-transparent focus:border-zinc-200 dark:focus:border-zinc-700 transition-colors pb-1"
                         />
                       </div>
                     </div>
 
+                    {/* Section delete — large touch target on mobile */}
                     <button
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => removeSection(sec.clientKey)}
-                      className="shrink-0 p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-all disabled:opacity-50"
+                      className="shrink-0 flex items-center justify-center w-10 h-10 rounded-2xl text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-all disabled:opacity-50"
                       title="Remove section"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
 
+                  {/* Field rows */}
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -701,7 +780,7 @@ export default function JournalCreateForm({
                       items={sec.fieldValues.map((f) => f.clientKey)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-2.5">
                         {sec.fieldValues.map((fv) => (
                           <SortableCustomFieldRow
                             key={fv.clientKey}
@@ -715,7 +794,8 @@ export default function JournalCreateForm({
                     </SortableContext>
                   </DndContext>
 
-                  <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  {/* Add field */}
+                  <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
                     <AddCustomFields
                       sectionKey={sec.clientKey}
                       onAddField={addCustomField}
@@ -729,6 +809,7 @@ export default function JournalCreateForm({
         )}
       </div>
 
+      {/* Bottom save button */}
       <div className="flex justify-end pt-8">
         <button
           type="submit"

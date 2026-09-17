@@ -148,16 +148,16 @@ export default function NotebooksPage() {
 
             {/* Segmented Control Tabs */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="inline-flex p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-xl gap-1">
+                <div className="inline-flex p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-full gap-1 border border-zinc-200/50 dark:border-zinc-800/50">
                     <Link
                         href="/thoughts"
-                        className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-white/50 dark:hover:bg-zinc-900/50 transition-all"
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-white/50 dark:hover:bg-zinc-900/50 transition-all"
                     >
                         <StickyNote className="w-3.5 h-3.5" />
                         Quick Notes
                     </Link>
                     <button 
-                        className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 shadow-2xs transition-all"
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 shadow-2xs transition-all"
                     >
                         <Folder className="w-3.5 h-3.5 text-amber-500" />
                         Notebooks (Spaces)
@@ -166,7 +166,7 @@ export default function NotebooksPage() {
 
                 <button
                     onClick={() => setIsCreating(true)}
-                    className="flex items-center gap-2 rounded-xl bg-zinc-900 px-3.5 py-1.5 text-xs font-semibold text-white transition-all hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-2xs active:scale-95 ml-auto"
+                    className="flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-2xs active:scale-95 ml-auto"
                 >
                     <Plus className="h-3.5 w-3.5" />
                     New Space
@@ -181,7 +181,7 @@ export default function NotebooksPage() {
                     placeholder="Search notebook spaces..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-500 transition-all dark:text-zinc-200 placeholder:text-zinc-400 shadow-2xs"
+                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-500 transition-all dark:text-zinc-200 placeholder:text-zinc-400 shadow-2xs"
                 />
             </div>
 

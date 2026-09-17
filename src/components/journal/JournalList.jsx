@@ -110,9 +110,9 @@ export default function JournalList({ journals = [], viewMode = "timeline" }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center justify-center gap-3 py-16 text-center rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/20"
+        className="flex flex-col items-center justify-center gap-3 py-16 text-center rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/30"
       >
-        <div className="w-12 h-12 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700/80 flex items-center justify-center shadow-2xs">
+        <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700/80 flex items-center justify-center shadow-2xs">
           <BookOpen className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
         </div>
         <div className="space-y-1 max-w-sm">
@@ -154,7 +154,7 @@ export default function JournalList({ journals = [], viewMode = "timeline" }) {
 
             {viewMode === "timeline" ? (
               /* Timeline View */
-              <div className="relative border-l border-zinc-200 dark:border-zinc-800 ml-3 sm:ml-4 pl-4 sm:pl-6 space-y-4">
+              <div className="relative border-l border-zinc-200 dark:border-zinc-800 ml-3 sm:ml-4 pl-4 sm:pl-6 space-y-3.5">
                 {group.items.map((j) => {
                   const { dayName, dayNum, monthName, year, timeStr } = formatFullDate(j.date);
                   const previewText = stripHtml(j.content || "");
@@ -163,15 +163,15 @@ export default function JournalList({ journals = [], viewMode = "timeline" }) {
                   return (
                     <div key={j.id} className="relative group">
                       {/* Timeline Node Bullet */}
-                      <div className="absolute -left-[21px] sm:-left-[29px] top-4 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-zinc-950 bg-zinc-400 dark:bg-zinc-600 group-hover:bg-zinc-900 dark:group-hover:bg-zinc-100 transition-colors shadow-2xs" />
+                      <div className="absolute -left-[23px] sm:-left-[31px] top-5 w-3.5 h-3.5 rounded-full border-2 border-zinc-50 dark:border-zinc-950 bg-zinc-300 dark:bg-zinc-700 group-hover:bg-zinc-900 dark:group-hover:bg-zinc-100 transition-colors shadow-2xs" />
 
                       <Link href={`/journals/${j.uuid || j.id}`}>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xs transition-all cursor-pointer">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xs hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
                           
                           {/* Left: Date Badge + Content */}
                           <div className="flex items-start gap-3.5 min-w-0 flex-1">
                             {/* Date Badge */}
-                            <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
+                            <div className="flex flex-col items-center justify-center w-11 h-11 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
                               <span className="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 leading-none">
                                 {dayName}
                               </span>
@@ -183,7 +183,7 @@ export default function JournalList({ journals = [], viewMode = "timeline" }) {
                             {/* Title & Preview */}
                             <div className="space-y-1 min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                                <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                                   {j.title || `Journal Entry — ${monthName} ${dayNum}`}
                                 </h3>
                                 <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 shrink-0">
@@ -226,14 +226,14 @@ export default function JournalList({ journals = [], viewMode = "timeline" }) {
               </div>
             ) : (
               /* Grid View */
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {group.items.map((j) => {
                   const { dayName, dayNum, monthName, year, timeStr } = formatFullDate(j.date);
                   const previewText = stripHtml(j.content || "");
 
                   return (
                     <Link key={j.id} href={`/journals/${j.uuid || j.id}`}>
-                      <div className="group relative flex flex-col justify-between gap-3 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xs transition-all cursor-pointer h-full min-h-[120px]">
+                      <div className="group relative flex flex-col justify-between gap-3 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xs hover:border-zinc-300 dark:hover:border-zinc-700 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full min-h-[130px]">
                         <div className="space-y-2 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">

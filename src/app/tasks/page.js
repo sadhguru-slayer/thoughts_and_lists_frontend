@@ -6,7 +6,7 @@ import { ChevronDown, Loader2, Search, ListTodo, X, CheckCircle2 } from "lucide-
 
 import TaskInput from "@/components/tasks/TaskInput";
 import TaskCard from "@/components/tasks/TaskCard";
-import TaskFilters from "@/components/tasks/TaskFilters";
+import TaskFilters, { TaskStatusPills } from "@/components/tasks/TaskFilters";
 import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
 import Pagination from "@/components/ui/Pagination";
 import { useTasks } from "@/lib/TasksContext";
@@ -14,24 +14,22 @@ import { groupTasksByDate } from "@/lib/taskUtils";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// TaskGroup — collapsible section with a date-bucket header
+// TaskGroup — collapsible section with a sleek date-bucket header
 // ---------------------------------------------------------------------------
 function TaskGroup({ group, onOpen, onToggleComplete, defaultOpen = true }) {
     const [open, setOpen] = useState(defaultOpen);
 
     return (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
             {/* Cluster Header Button */}
             <button
                 type="button"
                 onClick={() => setOpen(o => !o)}
                 className={cn(
-                    "w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-200 cursor-pointer group select-none",
-                    "bg-zinc-50/80 hover:bg-zinc-100/90 dark:bg-zinc-900/40 dark:hover:bg-zinc-800/60",
-                    "border border-zinc-200/60 dark:border-zinc-800/60"
+                    "w-full flex items-center justify-between py-1.5 px-1 text-left transition-colors cursor-pointer group select-none"
                 )}
             >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                     <motion.div
                         animate={{ rotate: open ? 0 : -90 }}
                         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -40,26 +38,24 @@ function TaskGroup({ group, onOpen, onToggleComplete, defaultOpen = true }) {
                         <ChevronDown className="w-4 h-4 shrink-0 stroke-[2.2]" />
                     </motion.div>
 
-                    <div className="flex items-center gap-2 truncate">
-                        <span className="text-sm leading-none" aria-hidden="true">{group.emoji}</span>
-                        <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 tracking-tight">
+                    <span className="text-sm leading-none" aria-hidden="true">{group.emoji}</span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                        {group.label}
+                    </h3>
+                    {group.badgeStyle && (
+                        <span className={cn(
+                            "hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                            group.badgeStyle
+                        )}>
+                            <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", group.dotColor)} />
                             {group.label}
                         </span>
-                        {group.badgeStyle && (
-                            <span className={cn(
-                                "hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                                group.badgeStyle
-                            )}>
-                                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", group.dotColor)} />
-                                {group.label}
-                            </span>
-                        )}
-                    </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold tabular-nums bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-zinc-700/60 shadow-2xs">
-                        {group.tasks.length} {group.tasks.length === 1 ? "item" : "items"}
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tabular-nums bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200/60 dark:border-zinc-700/60">
+                        {group.tasks.length} {group.tasks.length === 1 ? "task" : "tasks"}
                     </span>
                 </div>
             </button>
@@ -72,8 +68,8 @@ function TaskGroup({ group, onOpen, onToggleComplete, defaultOpen = true }) {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                        className="space-y-2 overflow-hidden pl-1 sm:pl-2 border-l-2 border-zinc-100 dark:border-zinc-800/80 ml-3.5 sm:ml-4"
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-2.5 overflow-hidden"
                     >
                         <AnimatePresence mode="popLayout">
                             {group.tasks.map(task => (
@@ -166,48 +162,46 @@ function TasksPageInner() {
         updateFilters({ search: "" });
     };
 
+    const totalTasksCount = pagination?.total ?? tasks.length;
+
     return (
-        <div className="w-full min-h-[calc(100vh-4rem)]">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 pb-24 sm:pb-20">
+        <div className="w-full space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-300">
 
-                {/* Page Header */}
-                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-5">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-2xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs shrink-0">
-                            <ListTodo className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                                Tasks
-                            </h1>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                Stay organized, manage priorities, and track daily progress.
-                            </p>
-                        </div>
+            {/* Page Header */}
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-5">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                        <ListTodo className="w-6 h-6 text-zinc-700 dark:text-zinc-300 shrink-0" />
+                        Tasks
+                    </h1>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                        Stay organized, manage priorities, and track daily progress.
+                    </p>
+                </div>
+                {totalTasksCount > 0 && (
+                    <div className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700/60 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-2xs">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+                        <span>{totalTasksCount} {totalTasksCount === 1 ? "task" : "tasks"}</span>
                     </div>
-                    {pagination?.total > 0 && (
-                        <div className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-zinc-500" />
-                            <span>{pagination.total} {pagination.total === 1 ? "task" : "tasks"}</span>
-                        </div>
-                    )}
-                </header>
+                )}
+            </header>
 
-                {/* Quick Task Creation */}
-                <section aria-label="Create Task">
-                    <TaskInput />
-                </section>
+            {/* Quick Task Creation */}
+            <section aria-label="Create Task">
+                <TaskInput />
+            </section>
 
-                {/* Search & Filters */}
-                <section className="space-y-3" aria-label="Task Filters">
-                    <form onSubmit={handleSearchSubmit} className="relative">
+            {/* Search & Filters */}
+            <section className="space-y-3" aria-label="Task Filters">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px]">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                         <input
                             type="search"
                             placeholder="Search tasks by title or details…"
                             value={searchInput}
                             onChange={handleSearchChange}
-                            className="w-full text-xs sm:text-sm rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-10 pr-9 py-2.5 sm:py-3 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-zinc-400/30 dark:focus:ring-zinc-600/30 focus:border-zinc-400 dark:focus:border-zinc-600 transition-all shadow-2xs"
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl pl-10 pr-9 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-500 transition-all dark:text-zinc-200 placeholder:text-zinc-400 shadow-2xs"
                         />
                         {searchInput && (
                             <button
@@ -221,7 +215,9 @@ function TasksPageInner() {
                         )}
                     </form>
                     <TaskFilters />
-                </section>
+                </div>
+                <TaskStatusPills />
+            </section>
 
                 {/* Task List — grouped by date bucket */}
                 <main className="space-y-5">
@@ -279,7 +275,6 @@ function TasksPageInner() {
                         </motion.div>
                     )}
                 </main>
-            </div>
 
             {/* Task Detail Sheet */}
             <AnimatePresence>

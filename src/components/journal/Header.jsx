@@ -39,7 +39,7 @@ export default function Header() {
         setTheme(resolvedTheme === "dark" ? "light" : "dark");
     };
 
-    const isThoughts = pathname.startsWith("/thoughts");
+    const isThoughts = pathname.startsWith("/thoughts") || pathname.startsWith("/notebooks");
     const isTasks = pathname.startsWith("/tasks");
     const isCreate = pathname === "/journals/write" || pathname === "/create";
     const isJournal = isJournalActive(pathname);
@@ -53,15 +53,15 @@ export default function Header() {
     };
 
     return (
-        <header className="sticky top-0 z-50 shrink-0 border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80 transition-colors">
+        <header className="sticky top-0 z-50 shrink-0 border-b border-zinc-200/80 bg-white/80 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/80 transition-colors">
             <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6">
                 {/* Left: Logo + Nav */}
                 <div className="flex items-center gap-6">
                     <Link
                         href="/"
-                        className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0"
+                        className="flex items-center gap-2.5 hover:opacity-80 transition-opacity shrink-0"
                     >
-                        <div className="relative h-8 w-8 overflow-hidden rounded-full">
+                        <div className="relative h-8 w-8 overflow-hidden rounded-full ring-1 ring-zinc-200 dark:ring-zinc-800">
                             <Image
                                 src="/light_theme_logo.jpeg"
                                 alt="Memo"
@@ -77,7 +77,7 @@ export default function Header() {
                     </Link>
 
                     {user && (
-                        <nav className="hidden sm:flex items-center gap-1">
+                        <nav className="hidden sm:flex items-center gap-1.5 p-1 rounded-full bg-zinc-100/70 dark:bg-zinc-900/60 border border-zinc-200/50 dark:border-zinc-800/50">
                             {NAV_ITEMS.map((item) => {
                                 const active = navActive(item);
                                 return (
@@ -85,10 +85,10 @@ export default function Header() {
                                         key={item.href}
                                         href={item.href}
                                         className={cn(
-                                            "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                                            "px-3.5 py-1 rounded-full text-xs font-semibold transition-all",
                                             active
-                                                ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
-                                                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                                ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 shadow-2xs"
+                                                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-800/40"
                                         )}
                                     >
                                         {item.label}
@@ -100,11 +100,11 @@ export default function Header() {
                 </div>
 
                 {/* Right: actions */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                     {!user && (
                         <Link
                             href="/about"
-                            className="text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors hidden sm:block px-3 py-1.5"
+                            className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors hidden sm:block px-3 py-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
                         >
                             About
                         </Link>
@@ -112,7 +112,7 @@ export default function Header() {
 
                     <button
                         onClick={toggleTheme}
-                        className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                        className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-all rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 cursor-pointer"
                         aria-label="Toggle theme"
                     >
                         {mounted && resolvedTheme === "dark" ? (
@@ -126,9 +126,9 @@ export default function Header() {
                         <Link
                             href="/settings"
                             className={cn(
-                                "p-2 rounded-lg transition-colors",
+                                "p-2 rounded-full transition-all active:scale-95",
                                 pathname === "/settings"
-                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
+                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 shadow-2xs"
                                     : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                             )}
                             aria-label="Settings"
@@ -136,13 +136,12 @@ export default function Header() {
                             <Settings className="h-4 w-4" />
                         </Link>
                     )}
-
                 </div>
             </div>
 
             {/* Mobile nav strip */}
             {user && (
-                <nav className="flex sm:hidden items-center gap-1 px-4 pb-2 overflow-x-auto">
+                <nav className="flex sm:hidden items-center gap-1.5 px-4 pb-2.5 overflow-x-auto">
                     {NAV_ITEMS.map((item) => {
                         const active = navActive(item);
                         return (
@@ -150,10 +149,10 @@ export default function Header() {
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    "shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                                    "shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all",
                                     active
-                                        ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
-                                        : "text-zinc-500 dark:text-zinc-400"
+                                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs"
+                                        : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
                                 )}
                             >
                                 {item.label}

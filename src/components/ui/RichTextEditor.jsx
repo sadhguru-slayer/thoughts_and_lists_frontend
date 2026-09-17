@@ -20,8 +20,12 @@ import {
   Quote,
   Strikethrough,
   Minus,
+  X,
+  Check,
 } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -199,7 +203,7 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }) {
       disabled={disabled}
       title={title}
       className={cn(
-        "p-1.5 rounded-lg text-xs font-medium transition-all",
+        "p-2 rounded-lg text-xs font-medium transition-all",
         "hover:bg-zinc-100 dark:hover:bg-zinc-800",
         "disabled:opacity-30 disabled:cursor-not-allowed",
         isActive
@@ -218,11 +222,16 @@ function Divider() {
   );
 }
 
-function MenuBar({ editor }) {
+function MenuBar({ editor, compact = false }) {
   if (!editor) return null;
 
+  const iconSize = compact ? "w-4 h-4" : "w-3.5 h-3.5";
+
   return (
-    <div className="flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-sm rounded-t-xl">
+    <div className={cn(
+      "flex flex-wrap items-center gap-0.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-sm",
+      compact ? "px-2 py-2 rounded-none" : "px-3 py-2 rounded-t-xl"
+    )}>
       {/* Text style */}
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -230,7 +239,7 @@ function MenuBar({ editor }) {
         disabled={!editor.can().toggleBold()}
         title="Bold (Ctrl+B)"
       >
-        <Bold className="w-3.5 h-3.5" />
+        <Bold className={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -238,7 +247,7 @@ function MenuBar({ editor }) {
         disabled={!editor.can().toggleItalic()}
         title="Italic (Ctrl+I)"
       >
-        <Italic className="w-3.5 h-3.5" />
+        <Italic className={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleStrike().run()}
@@ -246,7 +255,7 @@ function MenuBar({ editor }) {
         disabled={!editor.can().toggleStrike()}
         title="Strikethrough"
       >
-        <Strikethrough className="w-3.5 h-3.5" />
+        <Strikethrough className={iconSize} />
       </ToolbarButton>
 
       <Divider />
@@ -257,14 +266,14 @@ function MenuBar({ editor }) {
         isActive={editor.isActive("heading", { level: 2 })}
         title="Heading 2"
       >
-        <Heading2 className="w-3.5 h-3.5" />
+        <Heading2 className={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         isActive={editor.isActive("heading", { level: 3 })}
         title="Heading 3"
       >
-        <Heading3 className="w-3.5 h-3.5" />
+        <Heading3 className={iconSize} />
       </ToolbarButton>
 
       <Divider />
@@ -275,21 +284,21 @@ function MenuBar({ editor }) {
         isActive={editor.isActive("bulletList")}
         title="Bullet List"
       >
-        <List className="w-3.5 h-3.5" />
+        <List className={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         isActive={editor.isActive("orderedList")}
         title="Ordered List"
       >
-        <ListOrdered className="w-3.5 h-3.5" />
+        <ListOrdered className={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleTaskList().run()}
         isActive={editor.isActive("taskList")}
         title="Checklist"
       >
-        <CheckSquare className="w-3.5 h-3.5" />
+        <CheckSquare className={iconSize} />
       </ToolbarButton>
 
       <Divider />
@@ -301,14 +310,14 @@ function MenuBar({ editor }) {
         disabled={!editor.can().toggleCode()}
         title="Inline Code"
       >
-        <Code className="w-3.5 h-3.5" />
+        <Code className={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         isActive={editor.isActive("codeBlock")}
         title="Code Block"
       >
-        <Braces className="w-3.5 h-3.5" />
+        <Braces className={iconSize} />
       </ToolbarButton>
 
       <Divider />
@@ -319,13 +328,13 @@ function MenuBar({ editor }) {
         isActive={editor.isActive("blockquote")}
         title="Blockquote"
       >
-        <Quote className="w-3.5 h-3.5" />
+        <Quote className={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
         title="Horizontal Rule"
       >
-        <Minus className="w-3.5 h-3.5" />
+        <Minus className={iconSize} />
       </ToolbarButton>
 
       {/* Language picker — shown only when inside a code block */}
@@ -359,16 +368,12 @@ function MenuBar({ editor }) {
   );
 }
 
-export default function RichTextEditor({
-  content = "",
-  onChange,
-  placeholder = "Start writing\u2026",
-  disabled = false,
-  autoFocus = false,
-  minHeight = "140px",
-  className,
-}) {
-  const editor = useEditor({
+// ─── Mobile full-screen editor modal (iOS-style sheet) ───────────────────────
+function MobileEditorModal({ content, onChange, placeholder, onClose, triggerRect }) {
+  const [mounted, setMounted] = useState(false);
+
+  // The modal editor — separate instance from the inline one
+  const modalEditor = useEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false,
@@ -391,8 +396,163 @@ export default function RichTextEditor({
     onUpdate: ({ editor }) => {
       onChange?.(editor.getHTML());
     },
-    editable: !disabled,
-    autofocus: autoFocus ? "end" : false,
+    editable: true,
+    autofocus: "end",
+    editorProps: {
+      attributes: {
+        class: "focus:outline-none w-full px-4 py-4 text-base text-zinc-900 dark:text-zinc-100 leading-relaxed",
+        style: "min-height: 200px",
+      },
+    },
+  });
+
+  useEffect(() => {
+    setMounted(true);
+    // Lock body scroll while modal is open
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  const handleDone = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  // Compute the start Y position for the animation (from where the field is)
+  const startY = triggerRect
+    ? Math.min(triggerRect.top, window.innerHeight - 80)
+    : window.innerHeight;
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      <motion.div
+        key="mobile-editor-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-[2px]"
+        onPointerDown={handleDone}
+      />
+      <motion.div
+        key="mobile-editor-sheet"
+        initial={{ y: startY, opacity: 0.6, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: "100%", opacity: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 36, mass: 0.9 }}
+        className="fixed inset-x-0 bottom-0 z-[9999] flex flex-col bg-white dark:bg-zinc-950 rounded-t-3xl shadow-2xl"
+        style={{
+          top: "env(safe-area-inset-top, 0px)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          maxHeight: "100dvh",
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 border-b border-zinc-100 dark:border-zinc-800">
+          {/* Drag handle */}
+          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
+
+          <button
+            type="button"
+            onPointerDown={(e) => e.preventDefault()}
+            onClick={handleDone}
+            className="flex items-center gap-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 py-1 px-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            <X className="w-4 h-4" />
+            Cancel
+          </button>
+
+          <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 select-none">
+            {placeholder || "Write…"}
+          </span>
+
+          <button
+            type="button"
+            onPointerDown={(e) => e.preventDefault()}
+            onClick={handleDone}
+            className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400 py-1 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+          >
+            <Check className="w-4 h-4" />
+            Done
+          </button>
+        </div>
+
+        {/* Toolbar */}
+        <div className="shrink-0 overflow-x-auto">
+          <MenuBar editor={modalEditor} compact />
+        </div>
+
+        {/* Editor area */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <EditorContent editor={modalEditor} />
+        </div>
+
+        <style>{EDITOR_STYLES}</style>
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  );
+}
+
+// ─── Hook: detect mobile viewport ────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
+
+// ─── Main RichTextEditor component ───────────────────────────────────────────
+export default function RichTextEditor({
+  content = "",
+  onChange,
+  placeholder = "Start writing…",
+  disabled = false,
+  autoFocus = false,
+  minHeight = "140px",
+  className,
+}) {
+  const isMobile = useIsMobile();
+  const [modalOpen, setModalOpen] = useState(false);
+  const triggerRef = useRef(null);
+  const [triggerRect, setTriggerRect] = useState(null);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        codeBlock: false,
+        bulletList: { keepMarks: true, keepAttributes: false },
+        orderedList: { keepMarks: true, keepAttributes: false },
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        defaultLanguage: "plaintext",
+        HTMLAttributes: { class: "hljs" },
+      }),
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      Placeholder.configure({
+        placeholder,
+        emptyEditorClass: "is-editor-empty",
+      }),
+    ],
+    content,
+    onUpdate: ({ editor }) => {
+      // Only sync on desktop; on mobile the modal editor calls onChange directly
+      if (!isMobile) {
+        onChange?.(editor.getHTML());
+      }
+    },
+    editable: !disabled && !isMobile, // on mobile, inline editor is read-only
+    autofocus: autoFocus && !isMobile ? "end" : false,
     editorProps: {
       attributes: {
         class:
@@ -403,7 +563,6 @@ export default function RichTextEditor({
   });
 
   // Sync editor content when the `content` prop changes externally
-  // (e.g. when switching from read-only → edit mode with fresh data)
   useEffect(() => {
     if (!editor) return;
     const current = editor.getHTML();
@@ -412,21 +571,81 @@ export default function RichTextEditor({
     }
   }, [content, editor]);
 
+  // Keep mobile editor editable state in sync
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(!disabled && !isMobile);
+  }, [editor, disabled, isMobile]);
+
+  const openModal = useCallback(() => {
+    if (disabled) return;
+    if (triggerRef.current) {
+      setTriggerRect(triggerRef.current.getBoundingClientRect());
+    }
+    setModalOpen(true);
+  }, [disabled]);
+
+  const handleModalClose = useCallback(() => {
+    setModalOpen(false);
+  }, []);
+
+  const handleModalChange = useCallback((html) => {
+    onChange?.(html);
+    // Also update the background inline editor so content is in sync
+    if (editor) {
+      const current = editor.getHTML();
+      if (html !== current) {
+        editor.commands.setContent(html || "", false);
+      }
+    }
+  }, [onChange, editor]);
+
   return (
-    <div
-      className={cn(
-        "w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 shadow-sm overflow-hidden transition-all",
-        "focus-within:border-zinc-400 dark:focus-within:border-zinc-600 focus-within:ring-2 focus-within:ring-zinc-400/40 dark:focus-within:ring-zinc-600/40",
-        disabled && "opacity-50 pointer-events-none",
-        className
-      )}
-    >
-      <MenuBar editor={editor} />
-      <div className="min-w-0 max-w-full overflow-hidden">
-        <EditorContent editor={editor} />
+    <>
+      <div
+        ref={triggerRef}
+        className={cn(
+          "w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 shadow-sm overflow-hidden transition-all",
+          !isMobile && "focus-within:border-zinc-400 dark:focus-within:border-zinc-600 focus-within:ring-2 focus-within:ring-zinc-400/40 dark:focus-within:ring-zinc-600/40",
+          isMobile && !disabled && "cursor-pointer active:bg-zinc-50/80 dark:active:bg-zinc-900/60",
+          isMobile && modalOpen && "ring-2 ring-blue-400/50 border-blue-300 dark:border-blue-700",
+          disabled && "opacity-50 pointer-events-none",
+          className
+        )}
+        onClick={isMobile ? openModal : undefined}
+      >
+        {/* On desktop show the toolbar; on mobile show a compact hint bar */}
+        {isMobile ? (
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/80">
+            <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 tracking-wide uppercase">
+              Tap to edit
+            </span>
+            <div className="flex items-center gap-0.5 ml-auto opacity-40">
+              <Bold className="w-3 h-3 text-zinc-500" />
+              <Italic className="w-3 h-3 text-zinc-500" />
+              <List className="w-3 h-3 text-zinc-500" />
+            </div>
+          </div>
+        ) : (
+          <MenuBar editor={editor} />
+        )}
+        <div className={cn("min-w-0 max-w-full overflow-hidden", isMobile && "pointer-events-none")}>
+          <EditorContent editor={editor} />
+        </div>
+        <style>{EDITOR_STYLES}</style>
       </div>
-      <style>{EDITOR_STYLES}</style>
-    </div>
+
+      {/* Mobile full-screen editor modal */}
+      {isMobile && modalOpen && (
+        <MobileEditorModal
+          content={content}
+          onChange={handleModalChange}
+          placeholder={placeholder}
+          onClose={handleModalClose}
+          triggerRect={triggerRect}
+        />
+      )}
+    </>
   );
 }
 
