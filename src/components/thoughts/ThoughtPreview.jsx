@@ -17,6 +17,9 @@ export default function ThoughtPreview({ thought, onClose }) {
     const [error, setError] = useState(null);
     const [isMoveOpen, setIsMoveOpen] = useState(false);
 
+    const targetId = thought?.uuid || thought?.id;
+    const displayThought = fullThought || thought || {};
+
     useEffect(() => {
         const handleKey = (e) => { if (e.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -29,7 +32,7 @@ export default function ThoughtPreview({ thought, onClose }) {
     }, []);
 
     useEffect(() => {
-        if (!thought?.id && !thought?.uuid) return;
+        if (!targetId) return;
 
         let cancelled = false;
         setTimeout(() => {
@@ -38,7 +41,6 @@ export default function ThoughtPreview({ thought, onClose }) {
             setError(null);
         }, 0);
 
-        const targetId = thought.uuid || thought.id;
         fetchThoughtById(targetId)
             .then((data) => {
                 if (!cancelled) setFullThought(data);
@@ -51,7 +53,7 @@ export default function ThoughtPreview({ thought, onClose }) {
             });
 
         return () => { cancelled = true; };
-    }, [thought?.id, thought?.uuid, fetchThoughtById]);
+    }, [targetId, fetchThoughtById]);
 
     const { showConfirm } = useModal();
 
